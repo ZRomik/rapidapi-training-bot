@@ -10,8 +10,8 @@ async def process_start_command(message: Message):
     logger.info(
         "Обработка команды start. Регистрация пользователя и вывод приветственного сообщения."
     )
+    # добавляем пользователя в таблицу.
     add_user(message.from_user.id)
-    add_search(message.from_user.id, "lowprice")
     msg =\
     "Привет!\n"\
     "Я поисковый бот турагентства Too Easy Travel.\n"\

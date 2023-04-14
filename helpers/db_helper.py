@@ -5,7 +5,11 @@ from helpers.idgenerator import get__new_search_id
 
 def get_user_id(id: int) -> int:
     """Возвращает локальный идентификатор пользователя """
-    # user = Users.get(Users.tg_id == id)
+    try:
+        user = Users.get(Users.tg_id == id)
+        return user
+    except:
+        return None
     query = Users.select(["id"]).where(Users.tg_id == id)
     for user_id in query:
         if user_id:
