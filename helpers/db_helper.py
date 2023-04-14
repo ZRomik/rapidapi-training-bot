@@ -15,3 +15,10 @@ def add_user(id: int) -> int:
         return user_id
     return Users.create(tg_id = id).save()
 
+def add_search(user_id: int, kind: str) -> int:
+    """
+    Добавляет в таблицу истории запись о новом поиске и возвращает идентификатор поиска
+    :param user_id:
+    :param kind:
+    :return:
+    """
