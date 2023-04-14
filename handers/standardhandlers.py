@@ -2,6 +2,7 @@ from setups import dp
 import logging
 from aiogram.types import Message
 from helpers import add_user, get_user_id, add_search
+from keyboards import main_menu_keybord
 
 @dp.message_handler(commands=["start"])
 async def process_start_command(message: Message):
@@ -18,7 +19,8 @@ async def process_start_command(message: Message):
     "Я могу помочь найти подходящий вам отель в любом городе мира!\n"\
     "Чтобы ознакомиться со списком достуных мне команд введите команду /help."
     await message.answer(
-        msg
+        msg,
+        reply_markup=main_menu_keybord
     )
 
 

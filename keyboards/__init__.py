@@ -1,2 +1,2 @@
 from keyboards.mainmenukbd import main_menu_keybord
-from choicekbd import choice_keyboard, cancel_keyboard
+from keyboards.choicekbd import choice_keyboard, cancel_keyboard
