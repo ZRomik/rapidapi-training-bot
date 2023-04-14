@@ -1,11 +1,16 @@
 from setups import Users, History
 from peewee import *
+from helpers.idgenerator import get__new_search_id
 
 
 def get_user_id(id: int) -> int:
     """Возвращает локальный идентификатор пользователя """
-    user = Users.get(Users.tg_id == id)
-    return user.id if user else None
+    # user = Users.get(Users.tg_id == id)
+    query = Users.select(["id"]).where(Users.tg_id == id)
+    for user_id in query:
+        if user_id:
+            return user_id
+    return None
 
 
 def add_user(id: int) -> int:
@@ -22,3 +27,5 @@ def add_search(user_id: int, kind: str) -> int:
     :param kind:
     :return:
     """
+    search_id = get__new_search_id()
+    return History.create(user_id=user_id, search_id=search_id, search_kind=kind).save()

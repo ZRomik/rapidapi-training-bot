@@ -1,1 +1,1 @@
-from helpers.db_helper import add_user, get_user_id
+from helpers.db_helper import add_user, get_user_id, add_search

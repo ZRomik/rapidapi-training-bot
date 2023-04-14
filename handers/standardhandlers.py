@@ -1,7 +1,7 @@
 from setups import dp
 import logging
 from aiogram.types import Message
-from helpers import add_user, get_user_id
+from helpers import add_user, get_user_id, add_search
 
 @dp.message_handler(commands=["start"])
 async def process_start_command(message: Message):
@@ -11,6 +11,7 @@ async def process_start_command(message: Message):
         "Обработка команды start. Регистрация пользователя и вывод приветственного сообщения."
     )
     add_user(message.from_user.id)
+    add_search(message.from_user.id, "lowprice")
     msg =\
     "Привет!\n"\
     "Я поисковый бот турагентства Too Easy Travel.\n"\
