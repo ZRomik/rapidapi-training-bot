@@ -1,4 +1,4 @@
-from setups import bot, dp
+from setups import bot, dp, Users, History
 from aiogram.utils import executor
 import logging
 import sys
