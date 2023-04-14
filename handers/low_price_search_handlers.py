@@ -70,3 +70,4 @@ async def get_city_name(message: Message, state: FSMContext) -> None:
     city_name = message.text
     data = await state.get_data()
     data["location"]["name"] = city_name
+    await state.set_data(data)
