@@ -1,7 +1,7 @@
 from setups import dp
 import logging
 from aiogram.types import Message
-from helpers import add_user
+from helpers import add_user, get_user_id
 
 @dp.message_handler(commands=["start"])
 async def process_start_command(message: Message):
