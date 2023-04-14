@@ -11,7 +11,7 @@ async def process_start_command(message: Message):
     logger.info(
         "Обработка команды start. Регистрация пользователя и вывод приветственного сообщения."
     )
-    # добавляем пользователя в таблицу.
+    # регистрируем пользователя.
     add_user(message.from_user.id)
     msg =\
     "Привет!\n"\

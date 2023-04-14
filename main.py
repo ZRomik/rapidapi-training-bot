@@ -21,9 +21,6 @@ async def on_shutdown(_):
 def main():
     # настройка логгера.
     logging.basicConfig(
-        # filename="debug.log",
-        # filemode="w",
-        # encoding="utf-8",
         datefmt="%d.%m.%Y : %H:%M:%S",
         level=logging.INFO,
         handlers= [
