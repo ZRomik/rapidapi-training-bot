@@ -2,6 +2,7 @@ from setups import bot, dp
 from aiogram.utils import executor
 import logging
 import sys
+import handers
 
 async def on_startup(_):
     logger = logging.getLogger(__name__)
