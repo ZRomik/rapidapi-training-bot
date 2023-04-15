@@ -9,12 +9,6 @@ def get_user_id(id: int) -> int:
         return user.id
     except:
         return None
-    query = Users.select(["id"]).where(Users.tg_id == id)
-    for user_id in query:
-        if user_id:
-            return user_id
-    return None
-
 
 def add_user(id: int) -> int:
     """Добавляет нового пользователя в таблицу пользователей и возвращает локальный идентификатор"""
