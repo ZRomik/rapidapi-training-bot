@@ -9,6 +9,9 @@ choice_buttons = [
         "Отмена"
     )
 ]
+cancel_buttons = [
+    [KeyboardButton("Отмена")]
+]
 
 choice_keyboard = ReplyKeyboardMarkup(
     one_time_keyboard=False,
@@ -19,5 +22,5 @@ choice_keyboard = ReplyKeyboardMarkup(
 cancel_keyboard = ReplyKeyboardMarkup(
     one_time_keyboard=False,
     resize_keyboard=True,
-    keyboard=[KeyboardButton("Отмена")]
+    keyboard=cancel_buttons
 )

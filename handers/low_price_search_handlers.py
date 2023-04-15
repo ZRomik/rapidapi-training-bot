@@ -5,7 +5,8 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher import FSMContext
 import logging
-from helpers import add_user, add_search
+from helpers import add_user, add_search, RapidapiHelper, update_history
+from keyboards import main_menu_keybord, choice_keyboard, cancel_keyboard
 
 class LowPriceSearchStates(StatesGroup):
     low_price_get_city_name = State()
@@ -19,9 +20,18 @@ class LowPriceSearchStates(StatesGroup):
 async def cancel_search(message: Message, state: FSMContext) -> None:
     """Отмена поиска."""
     data = await state.get_data()
+    logger = logging.getLogger(__name__)
+    logger.error(
+        "Пользователь отменил поиск"
+    )
+    await message.answer(
+        "Поиск отменен",
+        reply_markup=main_menu_keybord
+    )
+    update_history(data["search"]["id"], {"cancelled": True, "user_cancel": True})
 
 
-@dp.message_handler(commands=["lowprice"])
+@dp.message_handler(commands=["lowprice"], state=None)
 async def start_low_price_search(message: Message, state: FSMContext) -> None:
     """Начало поиска топа дешевых отелей"""
     logger = logging.getLogger(__name__)
@@ -60,7 +70,8 @@ async def start_low_price_search(message: Message, state: FSMContext) -> None:
     }
     await state.set_data(data)
     await message.answer(
-        "Вы хотите найти топ самых дешевых отелей в городе. Я помогу вам.\nВведите название города:"
+        "Вы хотите найти топ самых дешевых отелей в городе. Я помогу вам.\nВведите название города:",
+        reply_markup=cancel_keyboard
     )
 
 

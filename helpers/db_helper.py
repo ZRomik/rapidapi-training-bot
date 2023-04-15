@@ -6,7 +6,7 @@ def get_user_id(id: int) -> int:
     """Возвращает локальный идентификатор пользователя """
     try:
         user = Users.get(Users.tg_id == id)
-        return user
+        return user.id
     except:
         return None
     query = Users.select(["id"]).where(Users.tg_id == id)
@@ -31,7 +31,7 @@ def add_search(user_id: int, kind: str) -> int:
     :return: (int) идентификатор записи
     """
     search_id = get__new_search_id()
-    return History.create(user_id=user_id, search_id=search_id, search_kind=kind).save()
+    return History.create(user_id=user_id, search_kind=kind).save()
 
 def update_history(search_id: int, data: dict) -> None:
     """
@@ -39,4 +39,4 @@ def update_history(search_id: int, data: dict) -> None:
     :param search_id: (int) идентификатор записи
     :param data: (dict) словарь с данными для обновления
     """
-    History.update(data).where(History.search_id==search_id)
+    History.update(data).where(History.search_id==search_id).execute()
