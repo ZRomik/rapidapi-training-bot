@@ -5,7 +5,7 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher import FSMContext
 import logging
-from helpers import add_user, add_new_search, RapidapiHelper, update_history
+from helpers import add_user, add_new_search, RapidapiHelper, cancel_search_by_user
 from keyboards import main_menu_keybord, choice_keyboard, cancel_keyboard
 
 class LowPriceSearchStates(StatesGroup):
@@ -28,8 +28,7 @@ async def cancel_search(message: Message, state: FSMContext) -> None:
         "Поиск отменен",
         reply_markup=main_menu_keybord
     )
-    update_history(search_id=data["search"]["id"], data={"cancelled": True, "user_cancel": True})
-
+    cancel_search_by_user(search_id=data["search"]["id"])
 
 @dp.message_handler(commands=["lowprice"], state=None)
 async def start_low_price_search(message: Message, state: FSMContext) -> None:

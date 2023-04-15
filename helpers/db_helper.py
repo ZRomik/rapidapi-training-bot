@@ -26,10 +26,16 @@ def add_new_search(user_id: int, kind: str) -> int:
     """
     return History.create(user_id=user_id, search_kind=kind).save()
 
-def update_history(search_id: int, data: dict) -> None:
+def cancel_search_by_user(search_id: int) -> None:
     """
-    Обновление полей таболицы поиска
-    :param search_id: (int) идентификатор записи
-    :param data: (dict) словарь с данными для обновления
+    Обновляет таблицу истории. Выставляет флаг отмены поиска пользователем.
+    :param search_id: (int) идентификатор записи в таблице истории
     """
-    History.update(data).where(History.id==search_id).execute()
+    History.update({"cancel": True, "user_cancel": True}).where(id == search_id).execute()
+
+def cancel_search_by_error(search_id: int) -> None:
+    """
+    Обновляет таблицу истории. Выставляет флаг отмены поиска из-за ошибки.
+    :param search_id: (int) идентификатор записи в таблице истории
+    """
+    History.update({"cancel": True, "error_cancel": True}).where(id == search_id).execute()
