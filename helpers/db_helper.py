@@ -39,3 +39,17 @@ def cancel_search_by_error(search_id: int) -> None:
     :param search_id: (int) идентификатор записи в таблице истории
     """
     History.update({"cancel": True, "error_cancel": True}).where(id == search_id).execute()
+
+def update_city_name(search_id: int, city_name: str) -> None:
+    """
+    Обновляет таблицу истории. Устанавливает название города.
+    :param search_id: (int) идентификатор записи в таблице истории
+    """
+    History.update({"city_name": city_name}).where(id == search_id).execute()
+
+def update_city_id(search_id: int, city_id: str) -> None:
+    """
+    Обновляет таблицу истории. Устанавливает id города.
+    :param search_id: (int) идентификатор записи в таблице истории
+    """
+    History.update({"city_id": city_id}).where(id == search_id).execute()

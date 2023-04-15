@@ -5,7 +5,7 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher import FSMContext
 import logging
-from helpers import add_user, add_new_search, RapidapiHelper, cancel_search_by_user
+from helpers import add_user, add_new_search, RapidapiHelper, cancel_search_by_user, update_city_name, update_city_id
 from keyboards import main_menu_keybord, choice_keyboard, cancel_keyboard
 
 class LowPriceSearchStates(StatesGroup):
