@@ -67,3 +67,7 @@ class RapidapiHelper:
         )
         if self.__is_good_response(response):
             return json.loads(response.text)
+        else:
+            code = response.status_code
+            if code == 0:
+                pass
