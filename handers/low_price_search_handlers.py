@@ -43,6 +43,10 @@ async def start_low_price_search(message: Message, state: FSMContext) -> None:
     # заполняем словарь со служебной информацией о поиске
     command = message.text[1:]
     search_id = add_new_search(user_id=user_id, kind=command)
+    helper = RapidapiHelper.get_helper()
+    try:
+        metadata = helper.get_metadata()
+    except
     data = {
         "user": {
             "tg id": message.from_user.id,
