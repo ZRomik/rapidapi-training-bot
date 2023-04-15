@@ -28,7 +28,7 @@ async def cancel_search(message: Message, state: FSMContext) -> None:
         "Поиск отменен",
         reply_markup=main_menu_keybord
     )
-    update_history(data["search"]["id"], {"cancelled": True, "user_cancel": True})
+    update_history(search_id=data["search"]["id"], data={"cancelled": True, "user_cancel": True})
 
 
 @dp.message_handler(commands=["lowprice"], state=None)
