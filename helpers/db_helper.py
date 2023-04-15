@@ -23,7 +23,7 @@ def add_user(id: int) -> int:
         return user_id
     return Users.create(tg_id = id).save()
 
-def add_search(user_id: int, kind: str) -> int:
+def add_new_search(user_id: int, kind: str) -> int:
     """
     Добавляет в таблицу истории запись о новом поиске и возвращает идентификатор поиска
     :param user_id: (int) идентификатор пользователя
@@ -39,4 +39,4 @@ def update_history(search_id: int, data: dict) -> None:
     :param search_id: (int) идентификатор записи
     :param data: (dict) словарь с данными для обновления
     """
-    History.update(data).where(History.search_id==search_id).execute()
+    History.update(data).where(History.id==search_id).execute()

@@ -1,7 +1,7 @@
 from setups import dp
 import logging
 from aiogram.types import Message
-from helpers import add_user, get_user_id, add_search, RapidapiHelper
+from helpers import add_user, get_user_id, add_new_search, RapidapiHelper
 from keyboards import main_menu_keybord
 
 @dp.message_handler(commands=["start"])

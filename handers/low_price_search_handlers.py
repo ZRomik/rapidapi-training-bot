@@ -1,11 +1,11 @@
 from setups import dp
-from helpers import add_user, add_search
+from helpers import add_user, add_new_search
 from aiogram.types import Message
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher import FSMContext
 import logging
-from helpers import add_user, add_search, RapidapiHelper, update_history
+from helpers import add_user, add_new_search, RapidapiHelper, update_history
 from keyboards import main_menu_keybord, choice_keyboard, cancel_keyboard
 
 class LowPriceSearchStates(StatesGroup):
@@ -43,7 +43,7 @@ async def start_low_price_search(message: Message, state: FSMContext) -> None:
     await LowPriceSearchStates.low_price_get_city_name.set()
     # заполняем словарь со служебной информацией о поиске
     command = message.text[1:]
-    search_id = add_search(user_id=user_id, kind=command)
+    search_id = add_new_search(user_id=user_id, kind=command)
     data = {
         "user": {
             "tg id": message.from_user.id,

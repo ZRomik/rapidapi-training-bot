@@ -3,7 +3,7 @@ from aiogram.utils import executor
 import logging
 import sys
 import handers
-from helpers import get_user_id, add_search
+from helpers import get_user_id, add_new_search
 
 async def on_startup(_):
     logger = logging.getLogger(__name__)
