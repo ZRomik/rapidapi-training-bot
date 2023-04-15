@@ -30,7 +30,6 @@ def add_new_search(user_id: int, kind: str) -> int:
     :param kind: (str) имя команды
     :return: (int) идентификатор записи
     """
-    search_id = get__new_search_id()
     return History.create(user_id=user_id, search_kind=kind).save()
 
 def update_history(search_id: int, data: dict) -> None:
