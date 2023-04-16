@@ -2,6 +2,7 @@ import requests
 from os import getenv
 from typing import Optional, Any
 import json
+import logging
 
 
 class RapidapiHelper:
@@ -71,3 +72,26 @@ class RapidapiHelper:
             code = response.status_code
             if code == 0:
                 pass
+
+    def search_location(self, name: str, metadata: dict) -> json:
+        """
+        Осуществляет поиск города по переданному названию.
+        """
+        query_params = {
+            "q": name,
+            "locale": "ru_RU",
+            "langid": "1049",
+            "siteid": metadata["site id"]
+        }
+        response = self.__internal_get_request(
+            end_point="locations/v3/search",
+            params=query_params
+        )
+        if self.__is_good_response(response):
+            return response.json()
+        else:
+            logger = logging.getLogger(__name__)
+            logger.error(
+                f"Сервер вернул код: {response.status_code}"
+            )
+            return {}
