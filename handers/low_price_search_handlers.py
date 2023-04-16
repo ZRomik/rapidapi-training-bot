@@ -5,8 +5,10 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher import FSMContext
 import logging
-from helpers import add_user, add_new_search, RapidapiHelper, cancel_search_by_user, update_city_name, update_city_id
+from helpers import add_user, add_new_search, RapidapiHelper, cancel_search_by_user, update_city_name, update_city_id,\
+    get_key_value, set_key_value
 from keyboards import main_menu_keybord, choice_keyboard, cancel_keyboard
+
 
 class LowPriceSearchStates(StatesGroup):
     low_price_get_city_name = State()
@@ -44,10 +46,11 @@ async def start_low_price_search(message: Message, state: FSMContext) -> None:
     command = message.text[1:]
     search_id = add_new_search(user_id=user_id, kind=command)
     helper = RapidapiHelper.get_helper()
-    try:
-        metadata = helper.get_metadata()
-    except:
-        pass
+    # получим метаданные для последующих запросов
+    metadata = helper.get_metadata()
+    if metadata:
+        site_id = get_key_value(metadata, "siteId")
+        eap_id = get_key_value(metadata, "EAPID")
     data = {
         "user": {
             "tg id": message.from_user.id,
@@ -70,6 +73,10 @@ async def start_low_price_search(message: Message, state: FSMContext) -> None:
         },
         "search": {
             "id": search_id
+        },
+        "metadata": {
+            "site id": site_id,
+            "eapid": eap_id
         }
     }
     await state.set_data(data)
