@@ -46,7 +46,8 @@ async def start_low_price_search(message: Message, state: FSMContext) -> None:
     helper = RapidapiHelper.get_helper()
     try:
         metadata = helper.get_metadata()
-    except
+    except:
+        pass
     data = {
         "user": {
             "tg id": message.from_user.id,

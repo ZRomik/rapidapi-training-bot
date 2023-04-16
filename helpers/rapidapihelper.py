@@ -37,7 +37,7 @@ class RapidapiHelper:
                 params=params,
                 url=request_url,
                 headers=header,
-                timeout=4.0
+                timeout=7
             )
 
     def __internal_post_request(self, end_point: str, *, params: Optional[dict] = None, headers: Optional[dict] = None) -> Any:
@@ -66,7 +66,7 @@ class RapidapiHelper:
             end_point="v2/get-meta-data"
         )
         if self.__is_good_response(response):
-            return json.loads(response.text)
+            return response.json()
         else:
             code = response.status_code
             if code == 0:
