@@ -239,15 +239,39 @@ async def get_children(message: Message, state: FSMContext) -> None:
 @dp.message_handler(state=SearchStates.get_min_price)
 async def get_min_price(message: Message, state: FSMContext) -> None:
     """
-    Получение минимальной цены номера.
+    Получение минимальной цены номера за сутки.
     """
     text = message.text
     if  not text.isnumeric():
         await message.answer(
-            "Ошибка! Вы ввели не число. Пjвторите ввод.",
+            "Ошибка! Вы ввели не число. Повторите ввод.",
             reply_markup=cancel_keyboard
         )
     elif text == "0" or text.startswith("-"):
         await message.answer(
             "Ошибка! Цена должна быть выше нуля. Повторите ввод."
         )
+        data = await state.get_data()
+    set_key_value(data, "min price", int(text))
+    await state.set_data(data)
+    await SearchStates.next()
+
+@dp.message_handler(state=SearchStates.get_max_price)
+async def get_max_price(message: Message, state: FSMContext) -> None:
+    """
+    Получение максимальной цены номера за сутки.
+    """
+    text = message.text
+    if  not text.isnumeric():
+        await message.answer(
+            "Ошибка! Вы ввели не число. Повторите ввод.",
+            reply_markup=cancel_keyboard
+        )
+    elif text == "0" or text.startswith("-"):
+        await message.answer(
+            "Ошибка! Цена должна быть выше нуля. Повторите ввод."
+        )
+        data = await state.get_data()
+    set_key_value(data, "max price", int(text))
+    await state.set_data(data)
+    await SearchStates.next()
