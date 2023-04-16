@@ -17,7 +17,7 @@ class RapidapiHelper:
         return instance
 
     def __internal_get_request(self, end_point: str, *,
-                               params: Optional[dict] = None, headers: Optional[dict] = None) -> Any:
+                               params: Optional[dict] = None, headers: Optional[dict] = None) -> "Response":
         """
         Выполнение GET-запроса к АПИ
         :param end_point: (str) точка запроса
