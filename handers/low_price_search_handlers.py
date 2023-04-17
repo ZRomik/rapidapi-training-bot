@@ -1,6 +1,6 @@
 from setups import dp
 from helpers import add_user, add_new_search
-from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
+from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher import FSMContext
@@ -20,7 +20,18 @@ class SearchStates(StatesGroup):
     get_children = State()
     get_min_price = State()
     get_max_price = State()
-    check_data = State()
+    user_choice = State()
+
+commands_desc = {
+    "lowprice": "топ самых дешёвых отелей в городе",
+    "highprice": "топ самых дорогих отелей в городе",
+    "bestdeal": "топ отелей, наиболее подходящих по цене и расположению от центра"
+}
+sort_orders = {
+    "lowprice": "PRICE_LOW_TO_HIGH",
+    "highprice": "топ самых дорогих отелей в городе",
+    "bestdeal": "топ отелей, наиболее подходящих по цене и расположению от центра"
+}
 
 
 @dp.message_handler(Text(equals="отмена", ignore_case=True), state="*")
@@ -35,7 +46,7 @@ async def cancel_search(message: Message, state: FSMContext) -> None:
         "Поиск отменен",
         reply_markup=main_menu_keybord
     )
-    cancel_search_by_user(search_id=data["search"]["id"])
+    cancel_search_by_user(data, search_id=get_key_value("search id"))
 
 @dp.message_handler(commands=["lowprice"], state=None)
 async def start_search(message: Message, state: FSMContext) -> None:
@@ -59,11 +70,11 @@ async def start_search(message: Message, state: FSMContext) -> None:
     data = {
         "user": {
             "tg id": message.from_user.id,
-            "id": user_id
+            "user id": user_id
         },
         "location": {
             "city name": "",
-            "id": ""
+            "city id": ""
         },
         "settlers": {
             "adults": None,
@@ -74,18 +85,18 @@ async def start_search(message: Message, state: FSMContext) -> None:
             "check out": ""
         },
         "command": {
-            "name": command
+            "cmd name": command
         },
         "search": {
-            "id": search_id
+            " search id": search_id
         },
         "metadata": {
             "site id": str(site_id),
-            "eapid": eap_id
+            "eapid": int(eap_id)
         },
         "price": {
-            "min price": "",
-            "max price": ""
+            "min price": None,
+            "max price": None
         }
     }
     await state.set_data(data)
@@ -100,9 +111,9 @@ async def get_city_name(message: Message, state: FSMContext) -> None:
     """Получение названия города и первичный поиск."""
     city_name = message.text
     data = await state.get_data()
-    data["location"]["name"] = city_name
+    set_key_value(data, "city name", city_name)
     await state.set_data(data)
-    update_city_name(search_id=data["search"]["id"], city_name=city_name)
+    update_city_name(search_id=get_key_value(data, "search id"), city_name=city_name)
     await message.answer(
         f"Поиск данных о городе '{city_name}'"
     )
@@ -129,6 +140,23 @@ async def get_city_name(message: Message, state: FSMContext) -> None:
             await message.answer(
                 "Выберите дате въезда:",
                 reply_markup= await SimpleCalendar().start_calendar()
+            )
+        else:
+            # попросим уточнить город у пользователя
+            buttons_list = [
+                InlineKeyboardButton(
+                    text=get_key_value(i_city, "fullName"),
+                    callback_data=get_key_value(i_city, "gaiaId")
+                )
+                for i_city in city_list
+            ]
+            city_kbd = InlineKeyboardMarkup(
+                row_width=1
+            )
+            city_kbd.add(*buttons_list)
+            await message.answer(
+                "Уточните город:",
+                reply_markup=city_kbd
             )
 
 
@@ -275,3 +303,52 @@ async def get_max_price(message: Message, state: FSMContext) -> None:
     set_key_value(data, "max price", int(text))
     await state.set_data(data)
     await SearchStates.next()
+    city_name = get_key_value(data, "city name")
+    cmd = get_key_value(data, "cmd name")
+    cmd_desc = commands_desc[cmd]
+    adults_count = get_key_value(data, "adults")
+    children_count = len(get_key_value(data, "children"))
+    check_in = get_check_in_date(data, "check in")
+    check_out = get_key_value(data, "check out")
+    min_price = get_key_value(data, " min price")
+    max_price = get_key_value(data, "max price")
+    msg =\
+    f"Проверьте данные поиска.\n"\
+    f"Вы хотите найти {cmd_desc}.\n"\
+    f"Постояльцы:\n"\
+    f"Взрослые: {adults_count}.\n"\
+    f"Дети: {children_count}.\n"\
+    f"Дата въезда: {check_in}.\n"\
+    f"Дата выезда: {check_out}.\n"\
+    f"Начать поиск?"
+    await SearchStates.next()
+    await message.answer(
+        msg,
+        reply_markup=choice_keyboard
+    )
+
+@dp.callback_query_handler(state=SearchStates.get_city_name)
+async def get_city_id(query: CallbackQuery, state: FSMContext) -> None:
+    """
+    Получение дентификатора города.
+    """
+    city_id = query.data
+    data = await state.get_data()
+    set_key_value(data, "city id", city_id)
+    search_id = get_key_value(data, "search id")
+    update_city_id(search_id=search_id, city_id=city_id)
+    await SearchStates.next()
+    await state.set_data(data)
+
+
+@dp.message_handler(Text(equals="искать",  ignore_case=True), state=SearchStates.user_choice)
+async def search_offers(message: Message, state: FSMContext) -> None:
+    """Поиск предложений и вывод результатов."""
+    data = await state.get_data()
+    await message.answer(
+        "Поиск предложений...",
+        reply_markup=ReplyKeyboardRemove()
+    )
+    cmd_name = get_key_value(data, "cmd name")
+    helper = RapidapiHelper.get_helper()
+    properties = helper.get_properties_list(data=data, sort_order=sort_orders[cmd_name])
