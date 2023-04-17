@@ -1,9 +1,8 @@
 from setups import Users, History
-from helpers.idgenerator import get__new_search_id
 
 
 def get_user_id(id: int) -> int:
-    """Возвращает локальный идентификатор пользователя """
+    """Возвращает идентификатор пользователя в БД"""
     try:
         user = Users.get(Users.tg_id == id)
         return user.id
