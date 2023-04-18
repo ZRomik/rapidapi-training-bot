@@ -16,7 +16,7 @@ def find_sub_dict(data, key) -> dict:
                     return result
         return None
 
-def get_key_value(data, key) -> Any:
+def get_value(data, key) -> Any:
     """
     Находит и возвращает значение переданного ключа в переданном объекте.
     Если ключ не найден, возвращает None
@@ -27,7 +27,7 @@ def get_key_value(data, key) -> Any:
     else:
         return None
 
-def set_key_value(data, key, value) -> None:
+def set_value(data, key, value) -> None:
     """
     Находит в переданном словаре ключ и устанавливает его в переданное значение.
     Если ключ не найден, создается новый ключ и инициализируется переданным значением.

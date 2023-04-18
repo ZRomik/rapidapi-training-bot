@@ -6,7 +6,7 @@ from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher import FSMContext
 import logging
 from helpers import add_user, add_new_search, RapidapiHelper, cancel_search_by_user, update_city_name, update_city_id,\
-    get_key_value, set_key_value
+    get_value, set_value
 from keyboards import main_menu_keybord, choice_keyboard, cancel_keyboard
 import json
 from aiogram_calendar import SimpleCalendar, simple_cal_callback
@@ -46,14 +46,17 @@ async def cancel_search(message: Message, state: FSMContext) -> None:
         "Поиск отменен",
         reply_markup=main_menu_keybord
     )
-    cancel_search_by_user(data, search_id=get_key_value(data, "search id"))
+    cancel_search_by_user(search_id=get_value(data, "search id"))
 
 @dp.message_handler(commands=["lowprice"], state=None)
 async def start_search(message: Message, state: FSMContext) -> None:
     """Начало поиска топа дешевых отелей"""
     logger = logging.getLogger(__name__)
     logger.info(
-        f"Пользователь {message.from_user.id} начал поиск самых дешевых отелей."
+        f"Пользователь {message.from_user.id} начал поис."
+    )
+    await message.answer(
+        "Получение метаданных для поиска."
     )
     # получаем идентификатор пользователя.
     user_id = add_user(id=message.from_user.id)
@@ -63,10 +66,6 @@ async def start_search(message: Message, state: FSMContext) -> None:
     search_id = add_new_search(user_id=user_id, kind=command)
     helper = RapidapiHelper.get_helper()
     # получим метаданные для последующих запросов
-    metadata = helper.get_metadata()
-    if metadata:
-        site_id = get_key_value(metadata, "siteId")
-        eap_id = get_key_value(metadata, "EAPID")
     data = {
         "user": {
             "tg id": message.from_user.id,
@@ -78,7 +77,7 @@ async def start_search(message: Message, state: FSMContext) -> None:
         },
         "settlers": {
             "adults": None,
-            "children": None
+            "children": []
         },
         "dates": {
             "check in": "",
@@ -87,12 +86,8 @@ async def start_search(message: Message, state: FSMContext) -> None:
         "command": {
             "cmd name": command
         },
-        "search": {
-            " search id": search_id
-        },
-        "metadata": {
-            "site id": str(site_id),
-            "eapid": int(eap_id)
+        "search data": {
+            "search id": search_id
         },
         "price": {
             "min price": None,
@@ -101,7 +96,7 @@ async def start_search(message: Message, state: FSMContext) -> None:
     }
     await state.set_data(data)
     await message.answer(
-        "Вы хотите найти топ самых дешевых отелей в городе. Я помогу вам.\nВведите название города:",
+        f"Вы хотите найти {commands_desc[command]}. Я помогу вам.\nВведите название города:",
         reply_markup=cancel_keyboard
     )
 
@@ -111,17 +106,16 @@ async def get_city_name(message: Message, state: FSMContext) -> None:
     """Получение названия города и первичный поиск."""
     city_name = message.text
     data = await state.get_data()
-    set_key_value(data, "city name", city_name)
+    set_value(data, "city name", city_name)
     await state.set_data(data)
-    update_city_name(search_id=get_key_value(data, "search id"), city_name=city_name)
+    update_city_name(search_id=get_value(data, "search id"), city_name=city_name)
     await message.answer(
         f"Поиск данных о городе '{city_name}'"
     )
     helper = RapidapiHelper.get_helper()
-    metadata = data["metadata"]
+    metadata = get_value(data, "metadata")
     result = helper.search_location(
-        name=city_name,
-        metadata=metadata
+        name=city_name
     )
     # проверим, что получили верные данные
     if result and result["rc"] == "OK":
@@ -130,8 +124,8 @@ async def get_city_name(message: Message, state: FSMContext) -> None:
         city_list = list(filter(lambda city: city["type"] == "CITY", city_data))
         # если в списке только 1 город, запоминаем его идентификатор и идем дальше
         if len(city_list) == 1:
-            city_id = get_key_value(city_list[0], 'gaiaId')
-            set_key_value(data, "city id", city_id)
+            city_id = get_value(city_list[0], 'gaiaId')
+            set_value(data, "city id", city_id)
             await state.set_data(data)
             await message.answer(
                 "Запомнил."
@@ -145,8 +139,8 @@ async def get_city_name(message: Message, state: FSMContext) -> None:
             # попросим уточнить город у пользователя
             buttons_list = [
                 InlineKeyboardButton(
-                    text=get_key_value(i_city, "fullName"),
-                    callback_data=get_key_value(i_city, "gaiaId")
+                    text=get_value(i_city, "fullName"),
+                    callback_data=get_value(i_city, "gaiaId")
                 )
                 for i_city in city_list
             ]
@@ -170,7 +164,7 @@ async def get_check_in_date(callback_query: CallbackQuery, callback_data: dict) 
         state = dp.current_state()
         data = await state.get_data()
         check_in = date.strftime("%d.%m.%Y")
-        set_key_value(data, "check in", check_in)
+        set_value(data, "check in", check_in)
         await state.set_data(data)
         await callback_query.message.answer(
             check_in,
@@ -193,7 +187,7 @@ async def get_check_out_date(callback_query: CallbackQuery, callback_data: dict)
         state = dp.current_state()
         data = await state.get_data()
         check_out = date.strftime("%d.%m.%Y")
-        set_key_value(data, "check in", check_out)
+        set_value(data, "check out", check_out)
         await state.set_data(data)
         await callback_query.message.answer(
             check_out,
@@ -219,7 +213,7 @@ async def get_adults_count(message: Message, state: FSMContext) -> None:
     else:
         adults_count = int(text)
         data = await state.get_data()
-        set_key_value(data, "adults", adults_count)
+        set_value(data, "adults", adults_count)
         await state.set_data(data)
         await SearchStates.next()
         await message.answer(
@@ -237,7 +231,12 @@ async def get_children(message: Message, state: FSMContext) -> None:
     # детей нет, идем дальше
     data = await state.get_data()
     if text == "0":
-        set_key_value(data, "chlildren", [])
+        set_value(data, "children", [])
+        await SearchStates.next()
+        await message.answer(
+            "Введите минимальную цену номера за сутки: ",
+            reply_markup=cancel_keyboard
+        )
     else:
         children = []
         for i_age in text.split():
@@ -255,7 +254,7 @@ async def get_children(message: Message, state: FSMContext) -> None:
                 children.append(
                     {"age": i_age}
                 )
-        set_key_value(data, "children", children)
+        set_value(data, "children", children)
         await state.set_data(data)
         await SearchStates.next()
         await message.answer(
@@ -275,14 +274,20 @@ async def get_min_price(message: Message, state: FSMContext) -> None:
             "Ошибка! Вы ввели не число. Повторите ввод.",
             reply_markup=cancel_keyboard
         )
+
     elif text == "0" or text.startswith("-"):
         await message.answer(
             "Ошибка! Цена должна быть выше нуля. Повторите ввод."
         )
+    else:
         data = await state.get_data()
-    set_key_value(data, "min price", int(text))
-    await state.set_data(data)
-    await SearchStates.next()
+        set_value(data, "min price", int(text))
+        await state.set_data(data)
+        await SearchStates.next()
+        await message.answer(
+            "Введите максимальную цену номера",
+            reply_markup=cancel_keyboard
+        )
 
 @dp.message_handler(state=SearchStates.get_max_price)
 async def get_max_price(message: Message, state: FSMContext) -> None:
@@ -299,49 +304,54 @@ async def get_max_price(message: Message, state: FSMContext) -> None:
         await message.answer(
             "Ошибка! Цена должна быть выше нуля. Повторите ввод."
         )
+    else:
         data = await state.get_data()
-    set_key_value(data, "max price", int(text))
-    await state.set_data(data)
-    await SearchStates.next()
-    city_name = get_key_value(data, "city name")
-    cmd = get_key_value(data, "cmd name")
-    cmd_desc = commands_desc[cmd]
-    adults_count = get_key_value(data, "adults")
-    children_count = len(get_key_value(data, "children"))
-    check_in = get_check_in_date(data, "check in")
-    check_out = get_key_value(data, "check out")
-    min_price = get_key_value(data, " min price")
-    max_price = get_key_value(data, "max price")
-    msg =\
-    f"Проверьте данные поиска.\n"\
-    f"Вы хотите найти {cmd_desc}.\n"\
-    f"Постояльцы:\n"\
-    f"Взрослые: {adults_count}.\n"\
-    f"Дети: {children_count}.\n"\
-    f"Дата въезда: {check_in}.\n"\
-    f"Дата выезда: {check_out}.\n"\
-    f"Начать поиск?"
-    await SearchStates.next()
-    await message.answer(
-        msg,
-        reply_markup=choice_keyboard
-    )
+        set_value(data, "max price", int(text))
+        await state.set_data(data)
+        await SearchStates.next()
+        city_name = get_value(data, "city name")
+        cmd = get_value(data, "cmd name")
+        cmd_desc = commands_desc[cmd]
+        adults_count = get_value(data, "adults")
+        children_count = len(get_value(data, "children"))
+        check_in = get_value(data, "check in")
+        check_out = get_value(data, "check out")
+        min_price = get_value(data, " min price")
+        max_price = get_value(data, "max price")
+        msg =\
+        f"Проверьте данные поиска.\n"\
+        f"Вы хотите найти {cmd_desc}.\n"\
+        f"Постояльцы:\n"\
+        f"Взрослые: {adults_count}.\n"\
+        f"Дети: {children_count}.\n"\
+        f"Дата въезда: {check_in}.\n"\
+        f"Дата выезда: {check_out}.\n"\
+        f"Начать поиск?"
+        await SearchStates.next()
+        await message.answer(
+            msg,
+            reply_markup=choice_keyboard
+        )
 
 @dp.callback_query_handler(state=SearchStates.get_city_name)
 async def get_city_id(query: CallbackQuery, state: FSMContext) -> None:
     """
-    Получение дентификатора города.
+    Получение идентификатора города.
     """
     city_id = query.data
     data = await state.get_data()
-    set_key_value(data, "city id", city_id)
-    search_id = get_key_value(data, "search id")
+    set_value(data, "city id", city_id)
+    search_id = get_value(data, "search id")
     update_city_id(search_id=search_id, city_id=city_id)
     await SearchStates.next()
     await state.set_data(data)
+    await query.message.answer(
+        "Выберите дату въезда: ",
+        reply_markup= await SimpleCalendar().start_calendar()
+    )
 
 
-@dp.message_handler(Text(equals="искать",  ignore_case=True), state=SearchStates.user_choice)
+@dp.message_handler(Text(equals="искать",  ignore_case=True))
 async def search_offers(message: Message, state: FSMContext) -> None:
     """Поиск предложений и вывод результатов."""
     data = await state.get_data()
@@ -349,6 +359,6 @@ async def search_offers(message: Message, state: FSMContext) -> None:
         "Поиск предложений...",
         reply_markup=ReplyKeyboardRemove()
     )
-    cmd_name = get_key_value(data, "cmd name")
+    cmd_name = get_value(data, "cmd name")
     helper = RapidapiHelper.get_helper()
     properties = helper.get_properties_list(data=data, sort_order=sort_orders[cmd_name])

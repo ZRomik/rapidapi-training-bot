@@ -3,7 +3,7 @@ from os import getenv
 from typing import Optional, Any
 import json
 import logging
-from .commonhelpers import get_key_value
+from .commonhelpers import get_value
 
 def from_str_date_to_dict_date(str_date: str) -> dict:
     """
@@ -52,7 +52,7 @@ class RapidapiHelper:
                 params=params,
                 url=request_url,
                 headers=header,
-                timeout=10
+                timeout=20
             )
 
     def __internal_post_request(self, end_point: str, *, params: Optional[dict] = None, headers: Optional[dict] = None) -> Any:
@@ -71,7 +71,7 @@ class RapidapiHelper:
                 url=request_url,
                 json=params,
                 headers=header,
-                timeout=10
+                timeout=20
             )
 
 
@@ -88,15 +88,15 @@ class RapidapiHelper:
             if code == 0:
                 pass
 
-    def search_location(self, name: str, metadata: dict) -> json:
+    def search_location(self, name: str) -> json:
         """
         Осуществляет поиск города по переданному названию.
         """
         query_params = {
             "q": name,
             "locale": "ru_RU",
-            "langid": "1049",
-            "siteid": metadata["site id"]
+            "langid": "1033",
+            "siteid": "300000001"
         }
         response = self.__internal_get_request(
             end_point="locations/v3/search",
@@ -112,45 +112,4 @@ class RapidapiHelper:
             return {}
 
 
-    def get_properties_list(self, data: dict, sort_order: str) -> json:
-        metadata = data["metadata"]
-        children = get_key_value(data, "children")
-        age_list = [
-            {"age": i_age}
-            for i_age in children
-        ]
-        query_params = {
-            "currency": "USD",
-            "eapid": metadata["eapid"],
-            "locale": "ru_RU",
-            "destination": {"regionId": get_key_value(data, "city id")},
-        "checkInDate": from_str_date_to_dict_date(get_key_value(data, "check in")),
-        "checkOutDate": from_str_date_to_dict_date(get_key_value(data, "check out")),
-        "rooms": [
-            {
-                "adults": get_key_value(data, "adults"),
-                "children": age_list
-            }
-        ],
-        "resultsStartingIndex": 0,
-        "resultsSize": 200,
-        "sort": sort_order,
-        "filters": {
-            "price": {
-                "max": get_key_value(data, "max price"),
-                "min": get_key_value(data, "min price")
-            }
-        }
-        }
-        response = self.__internal_post_request(
-            end_point="properties/v2/list",
-            params=query_params
-        )
-        if self.__is_good_response(response):
-            return response.json()
-        else:
-            logger = logging.getLogger(__name__)
-            logger.error(
-                f"Сервер вернул код: {response.status_code}"
-            )
-            return {}
+    def get_properties_list(self, data: dict, sort_order: str) -> 'json':

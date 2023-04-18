@@ -2,12 +2,13 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
 
 choice_buttons = [
-    KeyboardButton(
+    [KeyboardButton(
         "Искать"
     ),
     KeyboardButton(
         "Отмена"
     )
+    ]
 ]
 cancel_buttons = [
     [KeyboardButton("Отмена")]
