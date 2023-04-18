@@ -372,7 +372,7 @@ async def search_offers(message: Message, state: FSMContext) -> None:
                 await state.finish()
     else:
         await message.answer(
-            "Сервис поиска вернул ошибку.\nПопробуйте изменить критерии или попробуйте позднее."
+            "Сервис поиска вернул ошибку.\nПопробуйте изменить критерии поиска  или повторить поиск позднее."
         )
 
 
