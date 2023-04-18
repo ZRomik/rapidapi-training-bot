@@ -359,7 +359,7 @@ async def search_offers(message: Message, state: FSMContext) -> None:
                     hotel = sorted_hotels_list[index]
                     msg =\
                     f"Отель: {hotel['name']}\n"\
-                    f"Цена: {hotel['amount']}\n"\
+                    f"Цена за сутки: {hotel['amount']}\n"\
                     f"Средняя оценка: {hotel['score']}"
                     await message.answer(
                         msg,
