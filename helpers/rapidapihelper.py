@@ -154,7 +154,7 @@ class RapidapiHelper:
             )
             with open('query.txt', mode='w', encoding="utf-8") as file:
                 json.dump(query, file, indent=4)
-            logger.debug(
+            logger.info(
                 text
             )
             return {}

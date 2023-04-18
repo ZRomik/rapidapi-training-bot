@@ -362,5 +362,8 @@ async def search_offers(message: Message, state: FSMContext) -> None:
     cmd_name = get_value(data, "cmd name")
     helper = RapidapiHelper.get_helper()
     properties = helper.get_properties_list(data=data, sort_order=sort_orders[cmd_name])
-    if properties:
-        pass
+    if properties and not "errors" in properties:
+        search_data = properties["data"]
+        if search_data:
+            props_list = search_data["properties"]
+            if props_list:
