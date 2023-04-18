@@ -1,12 +1,12 @@
 from setups import dp
-from helpers import add_user, add_new_search
+from helpers import add_user, add_new_search, filter_search_locations
 from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher import FSMContext
 import logging
 from helpers import add_user, add_new_search, RapidapiHelper, cancel_search_by_user, update_city_name, update_city_id,\
-    get_value, set_value
+    get_value, set_value, filter_props_list
 from keyboards import main_menu_keybord, choice_keyboard, cancel_keyboard
 import json
 from aiogram_calendar import SimpleCalendar, simple_cal_callback
@@ -20,6 +20,7 @@ class SearchStates(StatesGroup):
     get_children = State()
     get_min_price = State()
     get_max_price = State()
+    get_result_count = State()
     user_choice = State()
 
 commands_desc = {
@@ -121,7 +122,7 @@ async def get_city_name(message: Message, state: FSMContext) -> None:
     if result and result["rc"] == "OK":
         # обработка полученных данных
         city_data = result["sr"]
-        city_list = list(filter(lambda city: city["type"] == "CITY", city_data))
+        city_list = filter_search_locations(city_data)
         # если в списке только 1 город, запоминаем его идентификатор и идем дальше
         if len(city_list) == 1:
             city_id = get_value(city_list[0], 'gaiaId')
@@ -309,28 +310,9 @@ async def get_max_price(message: Message, state: FSMContext) -> None:
         set_value(data, "max price", int(text))
         await state.set_data(data)
         await SearchStates.next()
-        city_name = get_value(data, "city name")
-        cmd = get_value(data, "cmd name")
-        cmd_desc = commands_desc[cmd]
-        adults_count = get_value(data, "adults")
-        children_count = len(get_value(data, "children"))
-        check_in = get_value(data, "check in")
-        check_out = get_value(data, "check out")
-        min_price = get_value(data, " min price")
-        max_price = get_value(data, "max price")
-        msg =\
-        f"Проверьте данные поиска.\n"\
-        f"Вы хотите найти {cmd_desc}.\n"\
-        f"Постояльцы:\n"\
-        f"Взрослые: {adults_count}.\n"\
-        f"Дети: {children_count}.\n"\
-        f"Дата въезда: {check_in}.\n"\
-        f"Дата выезда: {check_out}.\n"\
-        f"Начать поиск?"
-        await SearchStates.next()
         await message.answer(
-            msg,
-            reply_markup=choice_keyboard
+            "Сколько отелей показывать в ответе?",
+            reply_markup=cancel_keyboard
         )
 
 @dp.callback_query_handler(state=SearchStates.get_city_name)
@@ -363,7 +345,78 @@ async def search_offers(message: Message, state: FSMContext) -> None:
     helper = RapidapiHelper.get_helper()
     properties = helper.get_properties_list(data=data, sort_order=sort_orders[cmd_name])
     if properties and not "errors" in properties:
-        search_data = properties["data"]
-        if search_data:
-            props_list = search_data["properties"]
-            if props_list:
+        props_list = get_value(properties, "properties")
+        if props_list:
+            await message.answer(
+                "Сортировка списка."
+            )
+            hotels_data = filter_props_list(props_list=props_list)
+            if hotels_data:
+                sorted_hotels_list = sorted(hotels_data, key=lambda hotel: hotel["score"], reverse=True)
+                data = await state.get_data()
+                count = get_value(data, "result count")
+                for index in range(count):
+                    hotel = sorted_hotels_list[index]
+                    msg =\
+                    f"Отель: {hotel['name']}\n"\
+                    f"Цена: {hotel['amount']}\n"\
+                    f"Средняя оценка: {hotel['score']}"
+                    await message.answer(
+                        msg,
+                        reply_markup=ReplyKeyboardRemove()
+                    )
+                await message.answer(
+                    "Поиск успешно завершен.",
+                    reply_markup=main_menu_keybord
+                )
+                await state.finish()
+    else:
+        await message.answer(
+            "Сервис поиска вернул ошибку.\nПопробуйте изменить критерии или попробуйте позднее."
+        )
+
+
+@dp.message_handler(state=SearchStates.get_result_count)
+async def get_result_count(message: Message, state: FSMContext) -> None:
+    """Получение кол-ва отелей в ответе"""
+    text = message.text
+    if not text.isnumeric():
+        await message.answer(
+            "Ошибка! Вы ввели не число. Повторите ввод:",
+            reply_markup=cancel_keyboard
+        )
+    elif text.startswith("-"):
+        await message.answer(
+            "Ошибка! Число должно быть выше нуля. Повторите ввод.",
+            reply_markup=cancel_keyboard
+        )
+    else:
+        data = await state.get_data()
+        set_value(data, "result count", int(text))
+        await state.set_data(data)
+        await SearchStates.next()
+        city_name = get_value(data, "city name")
+        cmd = get_value(data, "cmd name")
+        cmd_desc = commands_desc[cmd]
+        adults_count = get_value(data, "adults")
+        children_count = len(get_value(data, "children"))
+        check_in = get_value(data, "check in")
+        check_out = get_value(data, "check out")
+        min_price = get_value(data, " min price")
+        max_price = get_value(data, "max price")
+
+        msg =\
+        f"Проверьте данные поиска.\n"\
+        f"Вы хотите найти {cmd_desc}.\n"\
+        f"Постояльцы:\n"\
+        f"Взрослые: {adults_count}.\n"\
+        f"Дети: {children_count}.\n"\
+        f"Дата въезда: {check_in}.\n"\
+        f"Дата выезда: {check_out}.\n"\
+        f"Отелей в ответе: {text}"
+        f"Начать поиск?"
+        await SearchStates.next()
+        await message.answer(
+            msg,
+            reply_markup=choice_keyboard
+        )

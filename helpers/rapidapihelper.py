@@ -128,7 +128,7 @@ class RapidapiHelper:
             }
         ],
             "resultsStartingIndex": 0,
-            "resultsSize": 200,
+            "resultsSize": 50,
             "sort": sort_order,
             "filters": {
                 "price": {
