@@ -46,7 +46,7 @@ async def cancel_search(message: Message, state: FSMContext) -> None:
         "Поиск отменен",
         reply_markup=main_menu_keybord
     )
-    cancel_search_by_user(data, search_id=get_key_value("search id"))
+    cancel_search_by_user(data, search_id=get_key_value(data, "search id"))
 
 @dp.message_handler(commands=["lowprice"], state=None)
 async def start_search(message: Message, state: FSMContext) -> None:
