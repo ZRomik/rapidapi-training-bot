@@ -113,3 +113,48 @@ class RapidapiHelper:
 
 
     def get_properties_list(self, data: dict, sort_order: str) -> 'json':
+        query = {
+            "currency": "USD",
+            "eapid": 1,
+            "locale": "ru_RU",
+            "siteId": 300000001,
+            "destination": {"regionId": get_value(data, "city id")},
+            "checkInDate": from_str_date_to_dict_date(get_value(data, "check in")),
+            "checkOutDate": from_str_date_to_dict_date(get_value(data, "check out")),
+        "rooms": [
+            {
+                "adults": get_value(data, "adults"),
+                "children": get_value(data, "children")
+            }
+        ],
+            "resultsStartingIndex": 0,
+            "resultsSize": 200,
+            "sort": sort_order,
+            "filters": {
+                "price": {
+                    "max": get_value(data, "max price"),
+                    "min": get_value(data, "min price")
+                }
+            }
+        }
+        response = self.__internal_post_request(
+            end_point="properties/v2/list",
+            params=query
+        )
+        if response and response.ok and response.text != "":
+            return response.json()
+        else:
+            logger = logging.getLogger(__name__)
+            logger.error(
+                f"Сервер вернул код {response.status_code}."
+            )
+            text = json.dumps(query, indent=4)
+            logger.info(
+                "Параметры запроса:"
+            )
+            with open('query.txt', mode='w', encoding="utf-8") as file:
+                json.dump(query, file, indent=4)
+            logger.debug(
+                text
+            )
+            return {}

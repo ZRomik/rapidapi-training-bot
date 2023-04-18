@@ -252,7 +252,7 @@ async def get_children(message: Message, state: FSMContext) -> None:
                 return
             else:
                 children.append(
-                    {"age": i_age}
+                    {"age": int(i_age)}
                 )
         set_value(data, "children", children)
         await state.set_data(data)
@@ -362,3 +362,5 @@ async def search_offers(message: Message, state: FSMContext) -> None:
     cmd_name = get_value(data, "cmd name")
     helper = RapidapiHelper.get_helper()
     properties = helper.get_properties_list(data=data, sort_order=sort_orders[cmd_name])
+    if properties:
+        pass
