@@ -377,12 +377,19 @@ async def search_offers(message: Message, state: FSMContext) -> None:
             for i_hotel in result_list:
                 details = helper.get_details(id=i_hotel["id"])
                 if details:
-                    # берем первую картинку в списке
-                    set_value(i_hotel, "image", get_value(details, "url"))
+                    # выкинем гуглокарты
+                    images = get_value(details, "images")
+                    for i_image in images:
+                        image_data = get_value(i_image, "image")
+                        url = get_value(image_data, "url")
+                        if "googleapis"not in url:
+                            set_value(i_hotel, "image", url)
+                            break
             await message.answer(
                 "Формирование списка..."
             )
             for i_hotel in result_list:
+                # googleapis
                 await message.answer_photo(
                     photo=i_hotel["image"]
                 )
