@@ -23,4 +23,4 @@ def sort_hotels_by_score(hotels_list: list) -> list:
     :param hotels_list: (list) переданный список отелей.
     :return: (list) отсортированный список отелей.
     """
-    return sorted(hotels_list, key=lambda score: score["score"])
+    return sorted(hotels_list, key=lambda score: score["score"], reverse=True)
