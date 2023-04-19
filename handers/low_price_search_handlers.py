@@ -384,18 +384,13 @@ async def search_offers(message: Message, state: FSMContext) -> None:
             await message.answer(
                 "Формирование списка..."
             )
-            for i_hotel in result_list:
-                # googleapis
-                await message.answer_photo(
-                    photo=i_hotel["image"]
-                )
-                msg =\
-                f"{get_value(i_hotel, 'name')}.\n"\
-                f"Оценка: {get_value(i_hotel, 'score')}.\n"\
-                f"Цена за сутки: {get_value(i_hotel, 'amount')}."
-                await message.answer(
-                    msg
-                )
+            msg =\
+            f"{get_value(i_hotel, 'name')}.\n"\
+            f"Оценка: {get_value(i_hotel, 'score')}.\n"\
+            f"Цена за сутки: {get_value(i_hotel, 'amount')}."
+            await message.answer(
+                msg
+            )
             await message.answer(
                 "Поиск завершен.",
                 reply_markup=main_menu_keybord
