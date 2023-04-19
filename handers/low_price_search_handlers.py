@@ -402,9 +402,6 @@ async def search_offers(message: Message, state: FSMContext) -> None:
                     set_value(i_hotel, "image url",
                     "https://thumbs.dreamstime.com/b/"
                     "no-image-available-icon-photo-camera-flat-vector-illustration-132483141.jpg")
-        await message.answer(
-            "Вывод..."
-        )
         for i_hotel in result_list:
             image_url = get_value(i_hotel, "image url")
             hotel_name = get_value(i_hotel, "name")
