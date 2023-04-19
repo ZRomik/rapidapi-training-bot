@@ -16,3 +16,11 @@ def filter_props_list(props_list: list) -> list:
     }
     for i_prop in props_list
     ]
+
+def sort_hotels_by_score(hotels_list: list) -> list:
+    """
+    Возвращает отсортированный по оценке клиентов список отелей.
+    :param hotels_list: (list) переданный список отелей.
+    :return: (list) отсортированный список отелей.
+    """
+    return sorted(hotels_list, key=lambda score: score["score"])

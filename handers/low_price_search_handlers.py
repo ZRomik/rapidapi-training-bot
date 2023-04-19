@@ -6,7 +6,7 @@ from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher import FSMContext
 import logging
 from helpers import add_user, add_new_search, RapidapiHelper, cancel_search_by_user, update_city_name, update_city_id,\
-    get_value, set_value, filter_props_list
+    get_value, set_value, filter_props_list, sort_hotels_by_score
 from keyboards import main_menu_keybord, choice_keyboard, cancel_keyboard
 import json
 from aiogram_calendar import SimpleCalendar, simple_cal_callback
@@ -93,6 +93,9 @@ async def start_search(message: Message, state: FSMContext) -> None:
         "price": {
             "min price": None,
             "max price": None
+        },
+        "count": {
+            "value": 5
         }
     }
     await state.set_data(data)
@@ -333,87 +336,115 @@ async def get_city_id(query: CallbackQuery, state: FSMContext) -> None:
     )
 
 
-@dp.message_handler(Text(equals="искать",  ignore_case=True))
+@dp.message_handler(Text(equals="искать",  ignore_case=True), state=SearchStates.user_choice)
 async def search_offers(message: Message, state: FSMContext) -> None:
     """Поиск предложений и вывод результатов."""
     data = await state.get_data()
     await message.answer(
-        "Поиск предложений...",
-        reply_markup=ReplyKeyboardRemove()
+        "Поиск предложений..."
     )
-    cmd_name = get_value(data, "cmd name")
+
     helper = RapidapiHelper.get_helper()
-    properties = helper.get_properties_list(data=data, sort_order=sort_orders[cmd_name])
-    if properties and not "errors" in properties:
-        props_list = get_value(properties, "properties")
-        if props_list:
+    search_data = helper.get_properties_list(
+        data=data,
+        sort_order=sort_orders[get_value(data, "cmd name")]
+    )
+    if search_data:
+        if "errors" in search_data:
             await message.answer(
-                "Сортировка списка."
+                "Поисковый сервис вернул ошибку. Попробуйте изменить критерии поиска или повторите позднее.",
+                reply_markup=main_menu_keybord
             )
-            hotels_data = filter_props_list(props_list=props_list)
-            if hotels_data:
-                sorted_hotels_list = sorted(hotels_data, key=lambda hotel: hotel["score"], reverse=True)
-                data = await state.get_data()
-                count = get_value(data, "result count")
-                for index in range(count):
-                    hotel = sorted_hotels_list[index]
-                    msg =\
-                    f"Отель: {hotel['name']}\n"\
-                    f"Цена за сутки: {hotel['amount']}\n"\
-                    f"Средняя оценка: {hotel['score']}"
-                    await message.answer(
-                        msg,
-                        reply_markup=ReplyKeyboardRemove()
-                    )
-                await message.answer(
-                    "Поиск успешно завершен.",
-                    reply_markup=main_menu_keybord
+            await state.finish()
+        else:
+            props_list = get_value(search_data, "properties")
+            await message.answer(
+                "Обработка данных..."
+            )
+            filtered_list = filter_props_list(
+                props_list=props_list
+            )
+            sorted_list = sort_hotels_by_score(filtered_list)
+            await message.answer(
+                "Загрузка фотографий.",
+                reply_markup=ReplyKeyboardRemove()
+            )
+            list_len = len(sorted_list)
+            if list_len > 5:
+                result_list = sorted_list[:5:]
+            else:
+                result_list = sorted_list[:list_len:]
+            for i_hotel in result_list:
+                details = helper.get_details(id=i_hotel["id"])
+                if details:
+                    # берем первую картинку в списке
+                    set_value(i_hotel, "image", get_value(details, "url"))
+            await message.answer(
+                "Формирование списка..."
+            )
+            for i_hotel in result_list:
+                await message.answer_photo(
+                    photo=i_hotel["image"]
                 )
-                await state.finish()
+                msg =\
+                f"{get_value(i_hotel, 'name')}.\n"\
+                f"Оценка: {get_value(i_hotel, 'score')}.\n"\
+                f"Цена за сутки: {get_value(i_hotel, 'amount')}."
+                await message.answer(
+                    msg
+                )
+            await message.answer(
+                "Поиск завершен.",
+                reply_markup=main_menu_keybord
+            )
     else:
         await message.answer(
-            "Сервис поиска вернул ошибку.\nПопробуйте изменить критерии поиска  или повторить поиск позднее."
+            "Поисковый сервис не вернул данных. Попробуйте изменить критерии поиска или повторите позднее.",
+            reply_markup=main_menu_keybord
         )
-
+        await state.finish()
 
 @dp.message_handler(state=SearchStates.get_result_count)
 async def get_result_count(message: Message, state: FSMContext) -> None:
-    """Получение кол-ва отелей в ответе"""
+    """Получение кол-ва отелей в ответе и проверка данных поиска"""
     text = message.text
-    if not text.isnumeric():
-        await message.answer(
-            "Ошибка! Вы ввели не число. Повторите ввод:",
-            reply_markup=cancel_keyboard
-        )
-    elif text.startswith("-"):
+    # отрицательное число или равно нулю
+    if text.startswith("-") or text == "0":
         await message.answer(
             "Ошибка! Число должно быть выше нуля. Повторите ввод.",
             reply_markup=cancel_keyboard
         )
+    # введено не число
+    elif not text.isnumeric():
+        await message.answer(
+            "Ошибка! Вы ввели не число. Повторите ввод.",
+            reply_markup=cancel_keyboard
+        )
     else:
+        count = int(text)
         data = await state.get_data()
-        set_value(data, "result count", int(text))
+        set_value(data, "value", count)
         await state.set_data(data)
-        await SearchStates.next()
+        # попросим проверить собранные данные перед началом поиска
         city_name = get_value(data, "city name")
-        cmd = get_value(data, "cmd name")
-        cmd_desc = commands_desc[cmd]
-        adults_count = get_value(data, "adults")
-        children_count = len(get_value(data, "children"))
+        kind = commands_desc[get_value(data, "cmd name")]
         check_in = get_value(data, "check in")
         check_out = get_value(data, "check out")
-        min_price = get_value(data, " min price")
+        adults_count = get_value(data, "adults")
+        child_count = len(get_value(data, "children"))
+        min_price = get_value(data, "min price")
         max_price = get_value(data, "max price")
-
         msg =\
-        f"Проверьте данные поиска.\n"\
-        f"Вы хотите найти {cmd_desc}.\n"\
+        f"Проверьте данные поиска:\n"\
+        f"В {city_name} вы ищете {kind}.\n"\
         f"Постояльцы:\n"\
         f"Взрослые: {adults_count}.\n"\
-        f"Дети: {children_count}.\n"\
+        f"Дети: {child_count}\n"\
         f"Дата въезда: {check_in}.\n"\
         f"Дата выезда: {check_out}.\n"\
-        f"Отелей в ответе: {text}"
+        f"Мин. цена: {min_price}.\n"\
+        f"Макс. цена: {max_price}.\n"\
+        f"Кол-во отелей в ответе: {count}.\n"\
         f"Начать поиск?"
         await SearchStates.next()
         await message.answer(

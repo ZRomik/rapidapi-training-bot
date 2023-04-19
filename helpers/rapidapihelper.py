@@ -5,6 +5,7 @@ import json
 import logging
 from .commonhelpers import get_value
 
+
 def from_str_date_to_dict_date(str_date: str) -> dict:
     """
     Переводит переданную дату в текстовом формате в дату в формате словаря для АПИ-запроса
@@ -21,7 +22,7 @@ def from_str_date_to_dict_date(str_date: str) -> dict:
 
 class RapidapiHelper:
     @classmethod
-    def get_helper(cls) -> "RapudapiHelper":
+    def get_helper(cls) -> 'RapudapiHelper':
         """
         Реализация паттерна одиночка.
         """
@@ -32,7 +33,7 @@ class RapidapiHelper:
         return instance
 
     def __internal_get_request(self, end_point: str, *,
-                               params: Optional[dict] = None, headers: Optional[dict] = None) -> "Response":
+                               params: Optional[dict] = None, headers: Optional[dict] = None, timeount: int = 20) -> "Response":
         """
         Выполнение GET-запроса к АПИ
         :param end_point: (str) точка запроса
@@ -52,10 +53,11 @@ class RapidapiHelper:
                 params=params,
                 url=request_url,
                 headers=header,
-                timeout=20
+                timeout=timeount
             )
 
-    def __internal_post_request(self, end_point: str, *, params: Optional[dict] = None, headers: Optional[dict] = None) -> Any:
+    def __internal_post_request(self, end_point: str, *, params: Optional[dict] = None,
+                                headers: Optional[dict] = None, timeout: int = 20) -> Any:
         """Выполнение POST-запроса к АПИ"""
         request_url = '/'.join(["https://hotels4.p.rapidapi.com", end_point])
         if headers:
@@ -71,12 +73,12 @@ class RapidapiHelper:
                 url=request_url,
                 json=params,
                 headers=header,
-                timeout=20
+                timeout=timeout
             )
-
 
     def __is_good_response(self, data: 'Response'):
         return data and data.status_code == 200
+
     def get_metadata(self):
         response = self.__internal_get_request(
             end_point="v2/get-meta-data"
@@ -111,8 +113,13 @@ class RapidapiHelper:
             )
             return {}
 
-
     def get_properties_list(self, data: dict, sort_order: str) -> 'json':
+        """
+        Поиск предложений по переданным критериям и возврат результата поиска
+        :param data: (dict) критерии поиска.
+        :param sort_order: (str) порядок сортировки результатов.
+        :return: (json) результат поиска
+        """
         query = {
             "currency": "USD",
             "eapid": 1,
@@ -121,12 +128,12 @@ class RapidapiHelper:
             "destination": {"regionId": get_value(data, "city id")},
             "checkInDate": from_str_date_to_dict_date(get_value(data, "check in")),
             "checkOutDate": from_str_date_to_dict_date(get_value(data, "check out")),
-        "rooms": [
-            {
-                "adults": get_value(data, "adults"),
-                "children": get_value(data, "children")
-            }
-        ],
+            "rooms": [
+                {
+                    "adults": get_value(data, "adults"),
+                    "children": get_value(data, "children")
+                }
+            ],
             "resultsStartingIndex": 0,
             "resultsSize": 50,
             "sort": sort_order,
@@ -158,3 +165,27 @@ class RapidapiHelper:
                 text
             )
             return {}
+
+    def get_details(self, id: str) -> 'json':
+        """
+        Получение дополнительной информации об отеле
+        :param id: (str) идентификатор отеля
+        :return: (json) данные поиска
+        """
+        query_params = {
+            "currency": "USD",
+            "eapid": 1,
+            "locale": "en_US",
+            "siteId": 300000001,
+            "propertyId": id
+        }
+        response = self.__internal_post_request(
+            end_point="properties/v2/detail",
+            params=query_params,
+            timeout=30
+        )
+        if response and response.ok and response.text != "":
+            return response.json()
+        else:
+            return {}
+
