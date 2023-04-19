@@ -5,7 +5,7 @@ def filter_search_locations(data) -> list:
     """Возвращает отфильтрованный"""
     return list(filter(lambda city: city["type"] == 'CITY', data))
 
-def filter_props_list(props_list: list) -> list:
+def build_hotels_list(props_list: list) -> list:
     """Возвращает список словарей с данными об отеле"""
     return [
         {
@@ -25,6 +25,6 @@ def sort_hotels_by_score(hotels_list: list) -> list:
     """
     return sorted(hotels_list, key=lambda score: score["score"], reverse=True)
 
-def exlude_googleapis_images(images_list: list) -> list:
+def build_images_list(images_list: list) -> list:
     """Фильтрует переданный список и исключает записи с адресом googleapis"""
     return list(filter(lambda no_google: "googleapis" not in no_google["image"]["url"], images_list))

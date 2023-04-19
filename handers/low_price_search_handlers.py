@@ -6,7 +6,7 @@ from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher import FSMContext
 import logging
 from helpers import add_user, add_new_search, RapidapiHelper, cancel_search_by_user, update_city_name, update_city_id,\
-    get_value, set_value, filter_props_list, sort_hotels_by_score, exlude_googleapis_images
+    get_value, set_value, build_hotels_list, sort_hotels_by_score, build_images_list
 from keyboards import main_menu_keybord, choice_keyboard, cancel_keyboard
 import json
 from aiogram_calendar import SimpleCalendar, simple_cal_callback
@@ -339,68 +339,92 @@ async def get_city_id(query: CallbackQuery, state: FSMContext) -> None:
 @dp.message_handler(Text(equals="искать",  ignore_case=True), state=SearchStates.user_choice)
 async def search_offers(message: Message, state: FSMContext) -> None:
     """Поиск предложений и вывод результатов."""
-    data = await state.get_data()
     await message.answer(
         "Поиск предложений..."
     )
-
     helper = RapidapiHelper.get_helper()
-    search_data = helper.get_properties_list(
+    data = await state.get_data()
+    order = sort_orders[get_value(data, "cmd name")]
+    result = helper.get_properties_list(
         data=data,
-        sort_order=sort_orders[get_value(data, "cmd name")]
+        sort_order=order
     )
-    if search_data:
-        if "errors" in search_data:
-            await message.answer(
-                "Поисковый сервис вернул ошибку. Попробуйте изменить критерии поиска или повторите позднее.",
-                reply_markup=main_menu_keybord
-            )
-            await state.finish()
-        else:
-            props_list = get_value(search_data, "properties")
-            await message.answer(
-                "Обработка данных..."
-            )
-            filtered_list = filter_props_list(
-                props_list=props_list
-            )
-            sorted_list = sort_hotels_by_score(filtered_list)
-            await message.answer(
-                "Загрузка фотографий.",
-                reply_markup=ReplyKeyboardRemove()
-            )
-            list_len = len(sorted_list)
-            if list_len > 5:
-                result_list = sorted_list[:5:]
-            else:
-                result_list = sorted_list[:list_len:]
-            for i_hotel in result_list:
-                details = helper.get_details(id=i_hotel["id"])
-                if details:
-                    # выкинем гуглокарты
-                    images = get_value(details, "images")
-                    clean_images = exlude_googleapis_images(images)
-                    url = get_value(clean_images[-1], "url")
-            await message.answer(
-                "Формирование списка..."
-            )
-            msg =\
-            f"{get_value(i_hotel, 'name')}.\n"\
-            f"Оценка: {get_value(i_hotel, 'score')}.\n"\
-            f"Цена за сутки: {get_value(i_hotel, 'amount')}."
-            await message.answer(
-                msg
-            )
-            await message.answer(
-                "Поиск завершен.",
-                reply_markup=main_menu_keybord
-            )
-    else:
+    # нет данных
+    if not result:
         await message.answer(
             "Поисковый сервис не вернул данных. Попробуйте изменить критерии поиска или повторите позднее.",
             reply_markup=main_menu_keybord
         )
         await state.finish()
+    # ошибка поиска
+    elif "errors" in result:
+        await message.answer(
+            "Поисковый сервис вернул ошибку. Попробуйте изменить критерии поиска или повторите позднее.",
+            reply_markup=main_menu_keybord
+        )
+        await state.finish()
+    # все нормально, обрабатываем ответ
+    else:
+        await message.answer(
+            "Обрабатываю полученные данные..."
+        )
+        hotels_list = build_hotels_list(
+            props_list=get_value(result, "properties")
+        )
+        # сортировка списка по рейтингу
+        await message.answer(
+            "Сортировка данных..."
+        )
+        sorted_list = sort_hotels_by_score(
+            hotels_list=hotels_list
+        )
+        list_len = len(sorted_list)
+        result_len = get_value(data, "value")
+        if list_len > result_len:
+            result_list = sorted_list[:result_len]
+        else:
+            result_list = sorted_list[:]
+        await message.answer(
+            f"Повашему запросу нашлось {list_len} отелей."
+        )
+        await message.answer(
+            "Загружаю фотографии..."
+        )
+        for i_hotel in result_list:
+            details = helper.get_details(
+                id=get_value(i_hotel, "id")
+            )
+            if details:
+                raw_list = get_value(details, "images")
+                clean_list = build_images_list(
+                    images_list=raw_list
+                )
+                set_value(i_hotel, "image url", get_value(clean_list[0], "url"))
+            else:
+                set_value(i_hotel, "image url",
+                "https://thumbs.dreamstime.com/b/"
+                "no-image-available-icon-photo-camera-flat-vector-illustration-132483141.jpg")
+            await message.answer(
+                "Подготовка..."
+            )
+            for i_hotel in result_list:
+                image_url = get_value(i_hotel, "image url")
+                hotel_name = get_value(i_hotel, "name")
+                score = get_value(i_hotel, "score")
+                price = get_value(i_hotel, "amount")
+                caption =\
+                f"{hotel_name}\n"\
+                f"Рейтинг: {score}\n"\
+                f"Цена за сутки проживания: {price}"
+                await message.answer_photo(
+                    photo=get_value(i_hotel, "image url"),
+                    caption=caption
+                )
+            await message.answer(
+                "Поиск завершен.",
+                reply_markup=main_menu_keybord
+            )
+            await state.finish()
 
 @dp.message_handler(state=SearchStates.get_result_count)
 async def get_result_count(message: Message, state: FSMContext) -> None:
