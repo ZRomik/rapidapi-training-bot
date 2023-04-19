@@ -6,7 +6,7 @@ from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher import FSMContext
 import logging
 from helpers import add_user, add_new_search, RapidapiHelper, cancel_search_by_user, update_city_name, update_city_id,\
-    get_value, set_value, filter_props_list, sort_hotels_by_score
+    get_value, set_value, filter_props_list, sort_hotels_by_score, exlude_googleapis_images
 from keyboards import main_menu_keybord, choice_keyboard, cancel_keyboard
 import json
 from aiogram_calendar import SimpleCalendar, simple_cal_callback
@@ -379,12 +379,8 @@ async def search_offers(message: Message, state: FSMContext) -> None:
                 if details:
                     # выкинем гуглокарты
                     images = get_value(details, "images")
-                    for i_image in images:
-                        image_data = get_value(i_image, "image")
-                        url = get_value(image_data, "url")
-                        if "googleapis"not in url:
-                            set_value(i_hotel, "image", url)
-                            break
+                    clean_images = exlude_googleapis_images(images)
+                    url = get_value(clean_images[-1], "url")
             await message.answer(
                 "Формирование списка..."
             )

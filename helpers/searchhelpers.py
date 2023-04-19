@@ -24,3 +24,7 @@ def sort_hotels_by_score(hotels_list: list) -> list:
     :return: (list) отсортированный список отелей.
     """
     return sorted(hotels_list, key=lambda score: score["score"], reverse=True)
+
+def exlude_googleapis_images(images_list: list) -> list:
+    """Фильтрует переданный список и исключает записи с адресом googleapis"""
+    return list(filter(lambda no_google: "googleapis" not in no_google["image"]["url"], images_list))
