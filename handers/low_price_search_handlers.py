@@ -385,9 +385,6 @@ async def search_offers(message: Message, state: FSMContext) -> None:
         else:
             result_list = sorted_list[:]
         await message.answer(
-            f"Повашему запросу нашлось {list_len} отелей."
-        )
-        await message.answer(
             "Загружаю фотографии..."
         )
         for i_hotel in result_list:
@@ -399,32 +396,33 @@ async def search_offers(message: Message, state: FSMContext) -> None:
                 clean_list = build_images_list(
                     images_list=raw_list
                 )
-                set_value(i_hotel, "image url", get_value(clean_list[0], "url"))
-            else:
-                set_value(i_hotel, "image url",
-                "https://thumbs.dreamstime.com/b/"
-                "no-image-available-icon-photo-camera-flat-vector-illustration-132483141.jpg")
-            await message.answer(
-                "Подготовка..."
+                if clean_list:
+                    set_value(i_hotel, "image url", get_value(clean_list[0], "url"))
+                else:
+                    set_value(i_hotel, "image url",
+                    "https://thumbs.dreamstime.com/b/"
+                    "no-image-available-icon-photo-camera-flat-vector-illustration-132483141.jpg")
+        await message.answer(
+            "Вывод..."
+        )
+        for i_hotel in result_list:
+            image_url = get_value(i_hotel, "image url")
+            hotel_name = get_value(i_hotel, "name")
+            score = get_value(i_hotel, "score")
+            price = get_value(i_hotel, "amount")
+            caption =\
+            f"{hotel_name}\n"\
+            f"Рейтинг: {score}\n"\
+            f"Цена за проживание: {price}"
+            await message.answer_photo(
+                photo=get_value(i_hotel, "image url"),
+                caption=caption
             )
-            for i_hotel in result_list:
-                image_url = get_value(i_hotel, "image url")
-                hotel_name = get_value(i_hotel, "name")
-                score = get_value(i_hotel, "score")
-                price = get_value(i_hotel, "amount")
-                caption =\
-                f"{hotel_name}\n"\
-                f"Рейтинг: {score}\n"\
-                f"Цена за сутки проживания: {price}"
-                await message.answer_photo(
-                    photo=get_value(i_hotel, "image url"),
-                    caption=caption
-                )
-            await message.answer(
-                "Поиск завершен.",
-                reply_markup=main_menu_keybord
-            )
-            await state.finish()
+        await message.answer(
+            "Поиск завершен.",
+            reply_markup=main_menu_keybord
+        )
+        await state.finish()
 
 @dp.message_handler(state=SearchStates.get_result_count)
 async def get_result_count(message: Message, state: FSMContext) -> None:

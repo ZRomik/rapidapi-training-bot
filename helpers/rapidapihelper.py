@@ -33,7 +33,7 @@ class RapidapiHelper:
         return instance
 
     def __internal_get_request(self, end_point: str, *,
-                               params: Optional[dict] = None, headers: Optional[dict] = None, timeount: int = 20) -> "Response":
+                               params: Optional[dict] = None, headers: Optional[dict] = None, timeount: int = 30) -> "Response":
         """
         Выполнение GET-запроса к АПИ
         :param end_point: (str) точка запроса
@@ -57,7 +57,7 @@ class RapidapiHelper:
             )
 
     def __internal_post_request(self, end_point: str, *, params: Optional[dict] = None,
-                                headers: Optional[dict] = None, timeout: int = 20) -> Any:
+                                headers: Optional[dict] = None, timeout: int = 30) -> Any:
         """Выполнение POST-запроса к АПИ"""
         request_url = '/'.join(["https://hotels4.p.rapidapi.com", end_point])
         if headers:
