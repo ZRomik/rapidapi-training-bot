@@ -54,7 +54,7 @@ async def start_search(message: Message, state: FSMContext) -> None:
     """Начало поиска топа дешевых отелей"""
     logger = logging.getLogger(__name__)
     logger.info(
-        f"Пользователь {message.from_user.id} начал поис."
+        f"Пользователь {message.from_user.id} начал поиск."
     )
     await message.answer(
         "Получение метаданных для поиска."
