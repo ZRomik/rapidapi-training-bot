@@ -61,10 +61,22 @@ def update_history_data(id: int, data: dict) -> None:
     """
     History.update(data).where(History.id == id).execute()
 
-def get_history(user_id: int) -> list:
+def get_history(user_id: int, limit: int) -> list:
     """
     Возвращает список словарей с данными о завершенных поисках пользователя.
     :param user_id: (int) тг-идентификатор пользователя
+    :param limit: (int) сколько записей вернуть
     :return: (list) результат поиска
     """
-    query = History.select().where()
+    query = History.select().where(History.user_id == user_id).limit(limit)
+    return [
+        {
+            "start_date": rec.start_date,
+            "city name": rec.city_name,
+            "cancelled": rec.cancelled,
+            "user cancel": rec.user_cancel,
+            "error cancel": rec.error_cancel,
+            "end date": rec.end_date
+        }
+        for rec in query
+    ]

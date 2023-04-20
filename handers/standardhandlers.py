@@ -4,7 +4,7 @@ from aiogram.types import Message
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher import FSMContext
-from helpers import add_user, get_user_id, add_new_search, RapidapiHelper
+from helpers import add_user, get_user_id, add_new_search, RapidapiHelper, get_history
 from keyboards import main_menu_keybord, choice_keyboard, cancel_keyboard
 
 class ShowHistoryStates(StatesGroup):
@@ -80,11 +80,33 @@ async def get_records_count(message: Message, state: FSMContext) -> None:
             "Ошибка! Число должно быть выше нуля. Повторите ввод.",
             reply_markup=cancel_keyboard
         )
-    # ыыедено не число
+    # введено не число
     elif not text.isnumeric():
         await message.answer(
             "Ошибка! Вы ввели не число. Повторите ввод."
         )
     # все нормально. Показываем историю.
     else:
-        pass
+        user_id = get_user_id(
+            id = message.from_user.id
+        )
+        history_list = get_history(
+            user_id=user_id,
+            limit=int(text)
+        )
+        if history_list:
+            for i_num, i_rec in enumerate(history_list):
+                msg =\
+                f"Поиск #{i_num + 1}"
+                await message.answer(
+                    msg
+                )
+                await message.answer(
+                    "Готово.",
+                    reply_markup=main_menu_keybord
+                )
+                await state.finish()
+        else:
+            await message.answer(
+                "Ваша история поиска пуста."
+            )

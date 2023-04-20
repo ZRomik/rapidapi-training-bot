@@ -1,3 +1,5 @@
+import datetime
+
 from setups import dp
 from helpers import add_user, add_new_search, filter_search_locations
 from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton
@@ -436,6 +438,10 @@ async def search_offers(message: Message, state: FSMContext) -> None:
         await message.answer(
             "Поиск завершен.",
             reply_markup=main_menu_keybord
+        )
+        update_history_data(
+            id=get_value(data, "search id"),
+            data={"end_date": datetime.datetime.now()}
         )
         await state.finish()
 
