@@ -6,7 +6,7 @@ from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher import FSMContext
 import logging
 from helpers import add_user, add_new_search, RapidapiHelper, cancel_search_by_user, update_city_name, update_city_id,\
-    get_value, set_value, build_hotels_list, sort_hotels_by_score, build_images_list
+    get_value, set_value, build_hotels_list, sort_hotels_by_score, build_images_list, cancel_search_by_error
 from keyboards import main_menu_keybord, choice_keyboard, cancel_keyboard
 import json
 from aiogram_calendar import SimpleCalendar, simple_cal_callback
@@ -139,6 +139,13 @@ async def get_city_name(message: Message, state: FSMContext) -> None:
                 "Выберите дате въезда:",
                 reply_markup= await SimpleCalendar().start_calendar()
             )
+        elif  len(city_list) == 0:
+            await message.answer(
+                f"Я не нашел никаких данных о городе '{city_name}'. Уточните название и повторите поиск.",
+                reply_markup=main_menu_keybord
+            )
+            await state.finish()
+            cancel_search_by_error(search_id=get_value(data, "search id"))
         else:
             # попросим уточнить город у пользователя
             buttons_list = [
@@ -355,6 +362,7 @@ async def search_offers(message: Message, state: FSMContext) -> None:
             "Поисковый сервис не вернул данных. Попробуйте изменить критерии поиска или повторите позднее.",
             reply_markup=main_menu_keybord
         )
+        cancel_search_by_error(get_value(data, "search id"))
         await state.finish()
     # ошибка поиска
     elif "errors" in result:
@@ -362,6 +370,7 @@ async def search_offers(message: Message, state: FSMContext) -> None:
             "Поисковый сервис вернул ошибку. Попробуйте изменить критерии поиска или повторите позднее.",
             reply_markup=main_menu_keybord
         )
+        cancel_search_by_error(get_value(data, "search id"))
         await state.finish()
     # все нормально, обрабатываем ответ
     else:
@@ -373,7 +382,7 @@ async def search_offers(message: Message, state: FSMContext) -> None:
         )
         # сортировка списка по рейтингу
         await message.answer(
-            "Сортировка данных..."
+            "Сортирую данные..."
         )
         sorted_list = sort_hotels_by_score(
             hotels_list=hotels_list
