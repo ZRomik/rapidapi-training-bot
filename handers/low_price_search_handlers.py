@@ -6,7 +6,8 @@ from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher import FSMContext
 import logging
 from helpers import add_user, add_new_search, RapidapiHelper, cancel_search_by_user, update_city_name, update_city_id,\
-    get_value, set_value, build_hotels_list, sort_hotels_by_score, build_images_list, cancel_search_by_error
+    get_value, set_value, build_hotels_list, sort_hotels_by_score, build_images_list, cancel_search_by_error,\
+    update_history_data
 from keyboards import main_menu_keybord, choice_keyboard, cancel_keyboard
 import json
 from aiogram_calendar import SimpleCalendar, simple_cal_callback
@@ -225,6 +226,10 @@ async def get_adults_count(message: Message, state: FSMContext) -> None:
         adults_count = int(text)
         data = await state.get_data()
         set_value(data, "adults", adults_count)
+        update_history_data(
+            id=get_value(data, "search id"),
+            data={"adults": adults_count}
+        )
         await state.set_data(data)
         await SearchStates.next()
         await message.answer(
@@ -265,6 +270,10 @@ async def get_children(message: Message, state: FSMContext) -> None:
                 children.append(
                     {"age": int(i_age)}
                 )
+        update_history_data(
+            id=get_value(data, "search id"),
+            data={"children": len(children)}
+        )
         set_value(data, "children", children)
         await state.set_data(data)
         await SearchStates.next()

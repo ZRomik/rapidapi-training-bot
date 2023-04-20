@@ -25,5 +25,6 @@ class History(BaseModel):
     cancelled = BooleanField(default=False) # флаг отмены поиска
     user_cancel = BooleanField(default=False) # поиск прекращен пользователем.
     error_cancel = BooleanField(default=False) # поиск прекращен из-за ошибки.
+    end_date = DateField(null=True)
 
 history_db.create_tables([Users, History])

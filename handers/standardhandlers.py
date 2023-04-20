@@ -87,3 +87,4 @@ async def get_records_count(message: Message, state: FSMContext) -> None:
         )
     # все нормально. Показываем историю.
     else:
+        pass

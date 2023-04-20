@@ -52,3 +52,19 @@ def update_city_id(search_id: int, city_id: str) -> None:
     :param search_id: (int) идентификатор записи в таблице истории
     """
     History.update({"city_id": city_id}).where(id == search_id).execute()
+
+def update_history_data(id: int, data: dict) -> None:
+    """
+    Обновляет таблицу истории.
+    :param id: (int) идентификатор поиска
+    :param values: (dict) новые поля и значения
+    """
+    History.update(data).where(History.id == id).execute()
+
+def get_history(user_id: int) -> list:
+    """
+    Возвращает список словарей с данными о завершенных поисках пользователя.
+    :param user_id: (int) тг-идентификатор пользователя
+    :return: (list) результат поиска
+    """
+    query = History.select().where()
