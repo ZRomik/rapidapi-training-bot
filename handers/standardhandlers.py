@@ -1,8 +1,14 @@
 from setups import dp
 import logging
 from aiogram.types import Message
+from aiogram.dispatcher.filters.state import State, StatesGroup
+from aiogram.dispatcher.filters import Text
+from aiogram.dispatcher import FSMContext
 from helpers import add_user, get_user_id, add_new_search, RapidapiHelper
-from keyboards import main_menu_keybord
+from keyboards import main_menu_keybord, choice_keyboard, cancel_keyboard
+
+class ShowHistoryStates(StatesGroup):
+    get_record_count = State()
 
 @dp.message_handler(commands=["start"])
 async def process_start_command(message: Message):
@@ -40,3 +46,44 @@ async def process_help_command(message: Message):
     await message.answer(
         msg
     )
+
+
+@dp.message_handler(Text(equals="отменить", ignore_case=True), state="*")
+async def cancel_command(message: Message, state: FSMContext) -> None:
+    """Отмена команды"""
+    await message.answer(
+        "Выполнение отменено."
+    )
+    await state.finish()
+
+
+@dp.message_handler(commands=["history"], state="*")
+async def process_history_command(message: Message, state: FSMContext) -> None:
+    """Обработка команды history. Запрос кол-ва записей"""
+    await ShowHistoryStates.get_record_count.set()
+    await message.answer(
+        "Сколько записей показывать?"
+    )
+    data = {
+        "count": 0
+    }
+    await state.set_data(data)
+
+
+@dp.message_handler(state=ShowHistoryStates.get_record_count)
+async def get_records_count(message: Message, state: FSMContext) -> None:
+    """Получение кол-ва записей для показа"""
+    text = message.text
+    # введено отрицательное число или ноль
+    if text.startswith("-") or text == "0":
+        await message.answer(
+            "Ошибка! Число должно быть выше нуля. Повторите ввод.",
+            reply_markup=cancel_keyboard
+        )
+    # ыыедено не число
+    elif not text.isnumeric():
+        await message.answer(
+            "Ошибка! Вы ввели не число. Повторите ввод."
+        )
+    # все нормально. Показываем историю.
+    else:
