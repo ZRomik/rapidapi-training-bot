@@ -98,16 +98,16 @@ async def get_records_count(message: Message, state: FSMContext) -> None:
             limit=int(text)
         )
         if history_list:
-            for i_num, i_rec in enumerate(history_list):
+            for i_num, i_info in enumerate(history_list):
                 text_list = []
-                start_date,start_time = format_date_time(get_value(i_rec, "start date"))
-                end_date, end_time = format_date_time(get_value(i_rec, "end date"))
-                city_name = get_value(i_rec, "city name")
-                cancelled = get_value(i_rec, "cancelled")
-                user_cancel = get_value(i_rec, "user cancel")
-                adults = get_value(i_rec, "adults")
-                children = get_value(i_rec, "children")
-                kind = get_value(i_rec, "kind")
+                start_date, start_time = format_date_time(get_value(i_info, "start date"))
+                end_date, end_time = format_date_time(get_value(i_info, "end date"))
+                city_name = get_value(i_info, "city name")
+                cancelled = get_value(i_info, "cancelled")
+                user_cancel = get_value(i_info, "user cancel")
+                adults = get_value(i_info, "adults")
+                children = get_value(i_info, "children")
+                kind = get_value(i_info, "kind")
                 text_list.append(f"Поиск #{i_num + 1}")
                 text_list.append(f"Поиск начат {start_date} в {start_time}")
                 if city_name:
