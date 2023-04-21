@@ -1,5 +1,4 @@
 import datetime
-
 from setups import dp
 from helpers import add_user, add_new_search, filter_search_locations
 from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton
@@ -13,6 +12,7 @@ from helpers import add_user, add_new_search, RapidapiHelper, cancel_search_by_u
 from keyboards import main_menu_keybord, choice_keyboard, cancel_keyboard
 import json
 from aiogram_calendar import SimpleCalendar, simple_cal_callback
+import emoji
 
 
 class SearchStates(StatesGroup):
@@ -62,7 +62,6 @@ async def start_search(message: Message, state: FSMContext) -> None:
     command = message.text[1:]
     search_id = add_new_search(user_id=user_id, kind=command)
     helper = RapidapiHelper.get_helper()
-    # получим метаданные для последующих запросов
     data = {
         "user": {
             "tg id": message.from_user.id,
@@ -418,11 +417,11 @@ async def search_offers(message: Message, state: FSMContext) -> None:
         for i_hotel in result_list:
             image_url = get_value(i_hotel, "image url")
             hotel_name = get_value(i_hotel, "name")
-            score = get_value(i_hotel, "score")
+            score = int(get_value(i_hotel, "score"))
             price = get_value(i_hotel, "amount")
             caption =\
             f"{hotel_name}\n"\
-            f"Рейтинг: {score}\n"\
+            f"Рейтинг: {score} {score * emoji.emojize(':star:')}\n"\
             f"Цена за проживание: {price}"
             await message.answer_photo(
                 photo=get_value(i_hotel, "image url"),

@@ -25,7 +25,13 @@ def add_new_search(user_id: int, kind: str) -> int:
     :param kind: (str) имя команды
     :return: (int) идентификатор записи
     """
-    return History.create(user_id=user_id, search_kind=kind).save()
+    return (
+        History.insert(
+            user_id=user_id,
+            search_kind=kind
+        )
+        .execute()
+    )
 
 def cancel_search_by_user(search_id: int) -> None:
     """
