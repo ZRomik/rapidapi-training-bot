@@ -418,7 +418,7 @@ async def search_offers(message: Message, state: FSMContext) -> None:
             image_url = get_value(i_hotel, "image url")
             hotel_name = get_value(i_hotel, "name")
             score = int(get_value(i_hotel, "score"))
-            price = get_value(i_hotel, "amount")
+            price = int(get_value(i_hotel, "amount"))
             caption =\
             f"{hotel_name}\n"\
             f"Рейтинг: {score} {score * emoji.emojize(':star:')}\n"\
