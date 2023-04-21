@@ -39,7 +39,7 @@ async def cancel_search(message: Message, state: FSMContext) -> None:
     data = await state.get_data()
     logger = logging.getLogger(__name__)
     logger.error(
-        "Пользователь отменил поиск"
+        f"Пользователь {message.from_user.id} отменил поиск"
     )
     cancel_search_by_user(search_id=get_value(data, "search id"))
     await state.finish()

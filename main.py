@@ -40,7 +40,8 @@ def main():
             on_startup=on_startup,
             on_shutdown=on_shutdown,
             timeout=3,
-            skip_updates=True
+            skip_updates=True,
+
         )
 
 if __name__ == "__main__":
