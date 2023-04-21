@@ -102,8 +102,12 @@ async def get_records_count(message: Message, state: FSMContext) -> None:
         if history_list:
             for i_num, i_info in enumerate(history_list):
                 text_list = []
-                start_date, start_time = format_date_time(get_value(i_info, "start date"))
-                end_date, end_time = format_date_time(get_value(i_info, "end date"))
+                start_at = get_value(i_info, "start date")
+                end_at = get_value(i_info, "end date")
+                if start_at:
+                    start_date, start_time = format_date_time(start_at)
+                if end_at:
+                    end_date, end_time = format_date_time(end_at)
                 city_name = get_value(i_info, "city name")
                 cancelled = get_value(i_info, "cancelled")
                 user_cancel = get_value(i_info, "user cancel")
@@ -115,7 +119,8 @@ async def get_records_count(message: Message, state: FSMContext) -> None:
                 if city_name:
                     text_list.append(f"Вы искали отели в городе {city_name}")
                 text_list.append(f"Вы искали: {get_value(commands_desc, kind)}")
-                text_list.append(f"Поиск закончен {end_date} в {end_time}")
+                if end_at:
+                    text_list.append(f"Поиск закончен {end_date} в {end_time}")
                 text = "Результат: "
                 if cancelled:
                     if user_cancel:
