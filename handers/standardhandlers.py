@@ -13,7 +13,9 @@ class ShowHistoryStates(StatesGroup):
     get_record_count = State()
 
 @dp.message_handler(commands=["start"], state="*")
-async def process_start_command(message: Message):
+async def process_start_command(message: Message, state: FSMContext):
+    if not state is None:
+        await state.finish()
     """Обработка команды start."""
     logger = logging.getLogger(__name__)
     logger.info(
