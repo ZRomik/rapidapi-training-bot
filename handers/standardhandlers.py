@@ -12,7 +12,7 @@ import datetime
 class ShowHistoryStates(StatesGroup):
     get_record_count = State()
 
-@dp.message_handler(commands=["start"])
+@dp.message_handler(commands=["start"], state="*")
 async def process_start_command(message: Message):
     """Обработка команды start."""
     logger = logging.getLogger(__name__)
