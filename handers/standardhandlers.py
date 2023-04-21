@@ -138,3 +138,4 @@ async def get_records_count(message: Message, state: FSMContext) -> None:
                 "Ваша история поиска пуста.",
                 reply_markup=main_menu_keybord
             )
+            await state.finish()
