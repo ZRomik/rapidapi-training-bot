@@ -1,4 +1,11 @@
 from typing import Any
+
+commands_desc = {
+    "lowprice": "топ самых дешёвых отелей в городе",
+    "highprice": "топ самых дорогих отелей в городе",
+    "bestdeal": "топ отелей, наиболее подходящих по цене и расположению от центра"
+}
+
 def find_sub_dict(data, key) -> dict:
     """Находит и возвращает словарь с переданным ключом"""
     if isinstance(data, list):
@@ -37,3 +44,7 @@ def set_value(data, key, value) -> None:
         sub_dict[key] = value
     else:
         data[key] = value
+
+def format_date_time(text: str) -> str:
+    """Форматирует переданную строку в определенный формат даты и времени"""
+    return text.strftime("%d.%m.%Y %H:%M:%S").split()

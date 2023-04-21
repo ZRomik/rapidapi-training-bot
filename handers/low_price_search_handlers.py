@@ -9,7 +9,7 @@ from aiogram.dispatcher import FSMContext
 import logging
 from helpers import add_user, add_new_search, RapidapiHelper, cancel_search_by_user, update_city_name, update_city_id,\
     get_value, set_value, build_hotels_list, sort_hotels_by_score, build_images_list, cancel_search_by_error,\
-    update_history_data
+    update_history_data, commands_desc
 from keyboards import main_menu_keybord, choice_keyboard, cancel_keyboard
 import json
 from aiogram_calendar import SimpleCalendar, simple_cal_callback
@@ -26,11 +26,6 @@ class SearchStates(StatesGroup):
     get_result_count = State()
     user_choice = State()
 
-commands_desc = {
-    "lowprice": "топ самых дешёвых отелей в городе",
-    "highprice": "топ самых дорогих отелей в городе",
-    "bestdeal": "топ отелей, наиболее подходящих по цене и расположению от центра"
-}
 sort_orders = {
     "lowprice": "PRICE_LOW_TO_HIGH",
     "highprice": "топ самых дорогих отелей в городе",
@@ -46,11 +41,12 @@ async def cancel_search(message: Message, state: FSMContext) -> None:
     logger.error(
         "Пользователь отменил поиск"
     )
+    cancel_search_by_user(search_id=get_value(data, "search id"))
+    await state.finish()
     await message.answer(
         "Поиск отменен",
         reply_markup=main_menu_keybord
     )
-    cancel_search_by_user(search_id=get_value(data, "search id"))
 
 @dp.message_handler(commands=["lowprice"], state=None)
 async def start_search(message: Message, state: FSMContext) -> None:

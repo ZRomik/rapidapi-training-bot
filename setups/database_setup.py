@@ -17,7 +17,7 @@ class Users(BaseModel):
 class History(BaseModel):
     user_id = ForeignKeyField(Users, field="id") # идентификатор пользователя в таблице пользователей
     search_kind = CharField() # текстовое описание причины поиска
-    start_date = DateField(default=datetime.datetime.now()) # дата начала поиска
+    start_date = DateTimeField(default=datetime.datetime.now()) # дата начала поиска
     city_name = CharField(default="")
     city_id = CharField(default="")
     adults = IntegerField(default=0)
@@ -25,6 +25,6 @@ class History(BaseModel):
     cancelled = BooleanField(default=False) # флаг отмены поиска
     user_cancel = BooleanField(default=False) # поиск прекращен пользователем.
     error_cancel = BooleanField(default=False) # поиск прекращен из-за ошибки.
-    end_date = DateField(null=True)
+    end_date = DateTimeField(null=True)
 
 history_db.create_tables([Users, History])

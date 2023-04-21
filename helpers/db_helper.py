@@ -1,3 +1,5 @@
+import datetime
+
 from setups import Users, History
 
 
@@ -30,7 +32,11 @@ def cancel_search_by_user(search_id: int) -> None:
     Обновляет таблицу истории. Выставляет флаг отмены поиска пользователем.
     :param search_id: (int) идентификатор записи в таблице истории
     """
-    History.update({"cancelled": True, "user_cancel": True}).where(id == search_id).execute()
+    History.update(
+        {"cancelled": True,
+         "user_cancel": True,
+         "end_date": datetime.datetime.now()})\
+        .where(id == search_id).execute()
 
 def cancel_search_by_error(search_id: int) -> None:
     """
@@ -71,7 +77,8 @@ def get_history(user_id: int, limit: int) -> list:
     query = History.select().where(History.user_id == user_id).limit(limit)
     return [
         {
-            "start_date": rec.start_date,
+            "start date": rec.start_date,
+            "kind": rec.search_kind,
             "city name": rec.city_name,
             "cancelled": rec.cancelled,
             "user cancel": rec.user_cancel,
