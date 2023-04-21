@@ -83,7 +83,9 @@ def get_history(user_id: int, limit: int) -> list:
             "cancelled": rec.cancelled,
             "user cancel": rec.user_cancel,
             "error cancel": rec.error_cancel,
-            "end date": rec.end_date
+            "end date": rec.end_date,
+            "adults": rec.adults,
+            "children": rec.children
         }
         for rec in query
     ]

@@ -55,9 +55,6 @@ async def start_search(message: Message, state: FSMContext) -> None:
     logger.info(
         f"Пользователь {message.from_user.id} начал поиск."
     )
-    await message.answer(
-        "Получение метаданных для поиска."
-    )
     # получаем идентификатор пользователя.
     user_id = add_user(id=message.from_user.id)
     await SearchStates.get_city_name.set()

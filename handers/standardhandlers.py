@@ -100,18 +100,19 @@ async def get_records_count(message: Message, state: FSMContext) -> None:
         if history_list:
             for i_num, i_rec in enumerate(history_list):
                 text_list = []
-                num = i_num + 1
                 start_date,start_time = format_date_time(get_value(i_rec, "start date"))
                 end_date, end_time = format_date_time(get_value(i_rec, "end date"))
                 city_name = get_value(i_rec, "city name")
                 cancelled = get_value(i_rec, "cancelled")
                 user_cancel = get_value(i_rec, "user cancel")
+                adults = get_value(i_rec, "adults")
+                children = get_value(i_rec, "children")
                 kind = get_value(i_rec, "kind")
-                text_list.append(f"Поиск #{num}")
+                text_list.append(f"Поиск #{i_num + 1}")
                 text_list.append(f"Поиск начат {start_date} в {start_time}")
-                text_list.append(f"Причина поиска: {get_value(commands_desc, kind)}")
                 if city_name:
                     text_list.append(f"Вы искали отели в городе {city_name}")
+                text_list.append(f"Вы искали: {get_value(commands_desc, kind)}")
                 text_list.append(f"Поиск закончен {end_date} в {end_time}")
                 text = "Результат: "
                 if cancelled:
@@ -119,15 +120,21 @@ async def get_records_count(message: Message, state: FSMContext) -> None:
                         text += "поиск отменен пользователем."
                     else:
                         text += "поиск завершился ошибкой."
+                else:
+                    text += "поиск завершен без ошибок."
                 text_list.append(text)
                 msg = '\n'.join(text_list)
                 await message.answer(
                     msg,
                     reply_markup=ReplyKeyboardRemove()
                 )
+            await message.answer(
+                "Вывод завершен.",
+                reply_markup=main_menu_keybord
+            )
+            await state.finish()
         else:
             await message.answer(
                 "Ваша история поиска пуста.",
                 reply_markup=main_menu_keybord
             )
-            await state.finish()
