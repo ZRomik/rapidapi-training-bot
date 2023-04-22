@@ -17,13 +17,18 @@ def build_hotels_list(props_list: list) -> list:
     for i_prop in props_list
     ]
 
-def sort_hotels_by_score(hotels_list: list) -> list:
+def get_values_for_sort_by_price_and_score(data):
+    price = float(get_value(data, "amount"))
+    score = float(get_value(data, "score"))
+    return price, score
+
+def sort_hotels_by_price_and_score(hotels_list: list) -> list:
     """
     Возвращает отсортированный по оценке клиентов список отелей.
     :param hotels_list: (list) переданный список отелей.
     :return: (list) отсортированный список отелей.
     """
-    return sorted(hotels_list, key=lambda score: score["score"], reverse=True)
+    return sorted(hotels_list, key=get_values_for_sort_by_price_and_score)
 
 def build_images_list(images_list: list) -> list:
     """Фильтрует переданный список и исключает записи с адресом googleapis"""

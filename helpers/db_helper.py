@@ -16,7 +16,7 @@ def add_user(id: int) -> int:
     user_id = get_user_id(id=id)
     if user_id:
         return user_id
-    return Users.create(tg_id = id).save()
+    return Users.insert(tg_id = id).execute()
 
 def add_new_search(user_id: int, kind: str) -> int:
     """
@@ -83,15 +83,15 @@ def get_history(user_id: int, limit: int) -> list:
     query = History.select().where(History.user_id == user_id).limit(limit)
     return [
         {
-            "start date": rec.start_date,
-            "kind": rec.search_kind,
-            "city name": rec.city_name,
-            "cancelled": rec.cancelled,
-            "user cancel": rec.user_cancel,
-            "error cancel": rec.error_cancel,
-            "end date": rec.end_date,
-            "adults": rec.adults,
-            "children": rec.children
+            "start date": i_rec.start_date,
+            "kind": i_rec.search_kind,
+            "city name": i_rec.city_name,
+            "cancelled": i_rec.cancelled,
+            "user cancel": i_rec.user_cancel,
+            "error cancel": i_rec.error_cancel,
+            "end date": i_rec.end_date,
+            "adults": i_rec.adults,
+            "children": i_rec.children
         }
-        for rec in query
+        for i_rec in query
     ]

@@ -7,7 +7,7 @@ from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher import FSMContext
 import logging
 from helpers import add_user, add_new_search, RapidapiHelper, cancel_search_by_user, update_city_name, update_city_id,\
-    get_value, set_value, build_hotels_list, sort_hotels_by_score, build_images_list, cancel_search_by_error,\
+    get_value, set_value, build_hotels_list, sort_hotels_by_price_and_score, build_images_list, cancel_search_by_error,\
     update_history_data, commands_desc
 from keyboards import main_menu_keybord, choice_keyboard, cancel_keyboard
 import json
@@ -29,7 +29,7 @@ class SearchStates(StatesGroup):
 sort_orders = {
     "lowprice": "PRICE_LOW_TO_HIGH",
     "highprice": "топ самых дорогих отелей в городе",
-    "bestdeal": "топ отелей, наиболее подходящих по цене и расположению от центра"
+    "bestdeal": "DISTANCE"
 }
 
 
@@ -48,7 +48,7 @@ async def cancel_search(message: Message, state: FSMContext) -> None:
         reply_markup=main_menu_keybord
     )
 
-@dp.message_handler(commands=["lowprice"], state=None)
+@dp.message_handler(commands=["lowprice", "highprice", "bestdeal"], state=None)
 async def start_search(message: Message, state: FSMContext) -> None:
     """Начало поиска топа дешевых отелей"""
     logger = logging.getLogger(__name__)
@@ -346,96 +346,6 @@ async def get_city_id(query: CallbackQuery, state: FSMContext) -> None:
     )
 
 
-@dp.message_handler(Text(equals="искать",  ignore_case=True), state=SearchStates.user_choice)
-async def search_offers(message: Message, state: FSMContext) -> None:
-    """Поиск предложений и вывод результатов."""
-    await message.answer(
-        "Поиск предложений..."
-    )
-    helper = RapidapiHelper.get_helper()
-    data = await state.get_data()
-    order = sort_orders[get_value(data, "cmd name")]
-    result = helper.get_properties_list(
-        data=data,
-        sort_order=order
-    )
-    # нет данных
-    if not result:
-        await message.answer(
-            "Поисковый сервис не вернул данных. Попробуйте изменить критерии поиска или повторите позднее.",
-            reply_markup=main_menu_keybord
-        )
-        cancel_search_by_error(get_value(data, "search id"))
-        await state.finish()
-    # ошибка поиска
-    elif "errors" in result:
-        await message.answer(
-            "Поисковый сервис вернул ошибку. Попробуйте изменить критерии поиска или повторите позднее.",
-            reply_markup=main_menu_keybord
-        )
-        cancel_search_by_error(get_value(data, "search id"))
-        await state.finish()
-    # все нормально, обрабатываем ответ
-    else:
-        await message.answer(
-            "Обрабатываю полученные данные..."
-        )
-        hotels_list = build_hotels_list(
-            props_list=get_value(result, "properties")
-        )
-        # сортировка списка по рейтингу
-        await message.answer(
-            "Сортирую данные..."
-        )
-        sorted_list = sort_hotels_by_score(
-            hotels_list=hotels_list
-        )
-        list_len = len(sorted_list)
-        result_len = get_value(data, "value")
-        if list_len > result_len:
-            result_list = sorted_list[:result_len]
-        else:
-            result_list = sorted_list[:]
-        await message.answer(
-            "Загружаю фотографии..."
-        )
-        for i_hotel in result_list:
-            details = helper.get_details(
-                id=get_value(i_hotel, "id")
-            )
-            if details:
-                raw_list = get_value(details, "images")
-                clean_list = build_images_list(
-                    images_list=raw_list
-                )
-                if clean_list:
-                    set_value(i_hotel, "image url", get_value(clean_list[0], "url"))
-                else:
-                    set_value(i_hotel, "image url",
-                    "https://thumbs.dreamstime.com/b/"
-                    "no-image-available-icon-photo-camera-flat-vector-illustration-132483141.jpg")
-        for i_hotel in result_list:
-            image_url = get_value(i_hotel, "image url")
-            hotel_name = get_value(i_hotel, "name")
-            score = int(get_value(i_hotel, "score"))
-            price = int(get_value(i_hotel, "amount"))
-            caption =\
-            f"{hotel_name}\n"\
-            f"Рейтинг: {score} {score * emoji.emojize(':star:')}\n"\
-            f"Цена за проживание: {price}"
-            await message.answer_photo(
-                photo=get_value(i_hotel, "image url"),
-                caption=caption
-            )
-        await message.answer(
-            "Поиск завершен.",
-            reply_markup=main_menu_keybord
-        )
-        update_history_data(
-            id=get_value(data, "search id"),
-            data={"end_date": datetime.datetime.now()}
-        )
-        await state.finish()
 
 @dp.message_handler(state=SearchStates.get_result_count)
 async def get_result_count(message: Message, state: FSMContext) -> None:
@@ -484,3 +394,94 @@ async def get_result_count(message: Message, state: FSMContext) -> None:
             msg,
             reply_markup=choice_keyboard
         )
+
+@dp.message_handler(Text(equals="искать",  ignore_case=True), state=SearchStates.user_choice)
+async def search_offers(message: Message, state: FSMContext) -> None:
+    """Поиск предложений и вывод результатов."""
+    await message.answer(
+        "Поиск предложений..."
+    )
+    helper = RapidapiHelper.get_helper()
+    data = await state.get_data()
+    order = sort_orders[get_value(data, "cmd name")]
+    result = helper.get_properties_list(
+        data=data,
+        sort_order=order
+    )
+    # нет данных
+    if not result:
+        await message.answer(
+            "Поисковый сервис не вернул данных. Попробуйте изменить критерии поиска или повторите позднее.",
+            reply_markup=main_menu_keybord
+        )
+        cancel_search_by_error(get_value(data, "search id"))
+        await state.finish()
+    # ошибка поиска
+    elif "errors" in result:
+        await message.answer(
+            "Поисковый сервис вернул ошибку. Попробуйте изменить критерии поиска или повторите позднее.",
+            reply_markup=main_menu_keybord
+        )
+        cancel_search_by_error(get_value(data, "search id"))
+        await state.finish()
+    # все нормально, обрабатываем ответ
+    else:
+        await message.answer(
+            "Обрабатываю полученные данные..."
+        )
+        hotels_list = build_hotels_list(
+            props_list=get_value(result, "properties")
+        )
+        # сортировка списка по рейтингу
+        await message.answer(
+            "Сортирую данные..."
+        )
+        sorted_list = sort_hotels_by_price_and_score(
+            hotels_list=hotels_list
+        )
+        list_len = len(sorted_list)
+        result_len = get_value(data, "value")
+        if list_len > result_len:
+            result_list = sorted_list[:result_len]
+        else:
+            result_list = sorted_list[:]
+        await message.answer(
+            "Загружаю фотографии..."
+        )
+        for i_hotel in result_list:
+            details = helper.get_details(
+                id=get_value(i_hotel, "id")
+            )
+            if details:
+                raw_list = get_value(details, "images")
+                clean_list = build_images_list(
+                    images_list=raw_list
+                )
+                if clean_list:
+                    set_value(i_hotel, "image url", get_value(clean_list[0], "url"))
+                else:
+                    set_value(i_hotel, "image url",
+                    "https://thumbs.dreamstime.com/b/"
+                    "no-image-available-icon-photo-camera-flat-vector-illustration-132483141.jpg")
+        for i_hotel in result_list:
+            image_url = get_value(i_hotel, "image url")
+            hotel_name = get_value(i_hotel, "name")
+            score = int(get_value(i_hotel, "score"))
+            price = int(get_value(i_hotel, "amount"))
+            caption =\
+            f"{hotel_name}\n"\
+            f"Рейтинг: {score} {score * emoji.emojize(':star:')}\n"\
+            f"Цена за проживание: {price}"
+            await message.answer_photo(
+                photo=get_value(i_hotel, "image url"),
+                caption=caption
+            )
+        await message.answer(
+            "Поиск завершен.",
+            reply_markup=main_menu_keybord
+        )
+        update_history_data(
+            id=get_value(data, "search id"),
+            data={"end_date": datetime.datetime.now()}
+        )
+        await state.finish()
