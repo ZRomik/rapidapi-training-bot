@@ -1,1 +1,1 @@
-from handers import standardhandlers, low_price_search_handlers
+from handers import standardhandlers, search_commands_handlers
