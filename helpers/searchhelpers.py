@@ -12,7 +12,7 @@ def build_hotels_list(props_list: list) -> list:
         "id": get_value(i_prop, "id"),
         "name": get_value(i_prop, "name"),
         "score": float(get_value(i_prop, "score")),
-        "amount": get_value(i_prop, "amount")
+        "amount": float(get_value(i_prop, "amount"))
     }
     for i_prop in props_list
     ]
@@ -30,6 +30,6 @@ def sort_hotels_by_price_and_score(hotels_list: list) -> list:
     """
     return sorted(hotels_list, key=get_values_for_sort_by_price_and_score)
 
-def build_images_list(images_list: list) -> list:
+def filter_image_list(images_list: list) -> list:
     """Фильтрует переданный список и исключает записи с адресом googleapis"""
     return list(filter(lambda no_google: "googleapis" not in no_google["image"]["url"], images_list))

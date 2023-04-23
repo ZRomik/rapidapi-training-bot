@@ -7,8 +7,8 @@ from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher import FSMContext
 import logging
 from helpers import add_user, add_new_search, RapidapiHelper, cancel_search_by_user, update_city_name, update_city_id,\
-    get_value, set_value, build_hotels_list, sort_hotels_by_price_and_score, build_images_list, cancel_search_by_error,\
-    update_history_data, commands_desc
+    get_value, set_value, build_hotels_list, sort_hotels_by_price_and_score, filter_image_list, cancel_search_by_error,\
+    update_history_data, commands_desc, succes_end_search
 from keyboards import main_menu_keybord, choice_keyboard, cancel_keyboard
 import json
 from aiogram_calendar import SimpleCalendar, simple_cal_callback
@@ -399,89 +399,107 @@ async def get_result_count(message: Message, state: FSMContext) -> None:
 async def search_offers(message: Message, state: FSMContext) -> None:
     """Поиск предложений и вывод результатов."""
     await message.answer(
-        "Поиск предложений..."
+        "Ищу предложения...",
+        reply_markup=ReplyKeyboardRemove()
     )
-    helper = RapidapiHelper.get_helper()
     data = await state.get_data()
-    order = sort_orders[get_value(data, "cmd name")]
-    result = helper.get_properties_list(
+    helper = RapidapiHelper.get_helper()
+    command = get_value(data, "cmd name")
+    order = get_value(commands_desc, get_value(data, "cmd name"))
+    props_list = helper.get_properties_list(
         data=data,
         sort_order=order
     )
-    # нет данных
-    if not result:
+    # нет данных.
+    if not props_list:
+        search_id = get_value(data, "search id")
+        cancel_search_by_error(
+            search_id=search_id
+        )
         await message.answer(
-            "Поисковый сервис не вернул данных. Попробуйте изменить критерии поиска или повторите позднее.",
-            reply_markup=main_menu_keybord
+            "Сервис поиска не вернул данных.\nПопробуйте изменить критерии или повторить позднее."
         )
-        cancel_search_by_error(get_value(data, "search id"))
-        await state.finish()
-    # ошибка поиска
-    elif "errors" in result:
+    # ошибка поиска.
+    elif "errors" in props_list:
+        search_id = get_value(data, "search id")
+        cancel_search_by_error(
+            search_id=search_id
+        )
         await message.answer(
-            "Поисковый сервис вернул ошибку. Попробуйте изменить критерии поиска или повторите позднее.",
-            reply_markup=main_menu_keybord
+            "Сервис поиска вернул вернул ошибку.\nПопробуйте изменить критерии или повторить позднее."
         )
-        cancel_search_by_error(get_value(data, "search id"))
-        await state.finish()
-    # все нормально, обрабатываем ответ
-    else:
-        await message.answer(
-            "Обрабатываю полученные данные..."
-        )
-        hotels_list = build_hotels_list(
-            props_list=get_value(result, "properties")
-        )
-        # сортировка списка по рейтингу
-        await message.answer(
-            "Сортирую данные..."
-        )
-        sorted_list = sort_hotels_by_price_and_score(
+    # все нормально. Обрабатываем данные.
+    await message.answer(
+        "Обработка данных..."
+    )
+    hotels_list = build_hotels_list(
+        props_list=get_value(props_list, "properties")
+    )
+    # дешевые отели
+    if command == "lowprice":
+        sorted_hotels_list = sort_hotels_by_price_and_score(
             hotels_list=hotels_list
         )
-        list_len = len(sorted_list)
-        result_len = get_value(data, "value")
-        if list_len > result_len:
-            result_list = sorted_list[:result_len]
+    # дорогие отели
+    elif command == "highprice":
+        pass
+    # лучший выбор
+    else:
+        pass
+    count = get_value(data, "value")
+    len_list = len(sorted_hotels_list)
+    if len_list > count:
+        result_list = sorted_hotels_list[:count:]
+    elif len_list <= count:
+        result_list = sorted_hotels_list[:]
+    await message.answer(
+        "Загружаю фотографии..."
+    )
+    for i_hotel in result_list:
+        details = helper.get_details(
+            id=get_value(i_hotel, "id")
+        )
+        if details:
+            filtered_images_list = filter_image_list(
+                images_list=get_value(details, "images")
+            )
+            set_value(i_hotel, "image", get_value(filtered_images_list[0], "url"))
         else:
-            result_list = sorted_list[:]
-        await message.answer(
-            "Загружаю фотографии..."
-        )
-        for i_hotel in result_list:
-            details = helper.get_details(
-                id=get_value(i_hotel, "id")
-            )
-            if details:
-                raw_list = get_value(details, "images")
-                clean_list = build_images_list(
-                    images_list=raw_list
-                )
-                if clean_list:
-                    set_value(i_hotel, "image url", get_value(clean_list[0], "url"))
-                else:
-                    set_value(i_hotel, "image url",
-                    "https://thumbs.dreamstime.com/b/"
-                    "no-image-available-icon-photo-camera-flat-vector-illustration-132483141.jpg")
-        for i_hotel in result_list:
-            image_url = get_value(i_hotel, "image url")
-            hotel_name = get_value(i_hotel, "name")
-            score = int(get_value(i_hotel, "score"))
-            price = int(get_value(i_hotel, "amount"))
-            caption =\
-            f"{hotel_name}\n"\
-            f"Рейтинг: {score} {score * emoji.emojize(':star:')}\n"\
-            f"Цена за проживание: {price}"
+            set_value(i_hotel, "image", "")
+    await message.answer(
+        "Вывод результатов..."
+    )
+    for i_hotel in result_list:
+        hotel_name = get_value(i_hotel, "name")
+        image_url = get_value(i_hotel, "image")
+        score = get_value(i_hotel, "score")
+        price = get_value(i_hotel, "amount")
+        msg =\
+        f"Отель: {hotel_name}\n"\
+        f"Рейтинг: {score} {emoji.emojize(':star:') * int(score)}\n"\
+        f"Цена: {round(price, 2)}"
+        if image_url:
             await message.answer_photo(
-                photo=get_value(i_hotel, "image url"),
-                caption=caption
+                photo=image_url,
+                caption=msg
             )
-        await message.answer(
-            "Поиск завершен.",
-            reply_markup=main_menu_keybord
-        )
-        update_history_data(
-            id=get_value(data, "search id"),
-            data={"end_date": datetime.datetime.now()}
-        )
-        await state.finish()
+        else:
+            msg = '\n'.join(
+                [
+                    "Фото отсутствует",
+                    msg
+                ]
+            )
+            await message.answer(
+                msg
+            )
+            succes_end_search(
+                search_id=get_value(data, "search id")
+            )
+    await message.answer(
+        "Вывод завершен",
+        reply_markup=main_menu_keybord
+    )
+    succes_end_search(
+        search_id=get_value(data, "search id")
+    )

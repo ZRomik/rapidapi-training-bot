@@ -95,3 +95,11 @@ def get_history(user_id: int, limit: int) -> list:
         }
         for i_rec in query
     ]
+
+def succes_end_search(search_id: int) -> None:
+    """Обновляет таблицу истории записью, завершающей поиск"""
+    History.update(
+        {"end_date": datetime.datetime.now()}
+    ).where(
+        History.id == search_id
+    ).execute()
