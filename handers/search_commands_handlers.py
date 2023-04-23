@@ -499,3 +499,8 @@ async def search_offers(message: Message, state: FSMContext) -> None:
                 msg
             )
     #endregion
+    await state.finish()
+    await message.answer(
+        "Вывод завершен",
+        reply_markup=main_menu_keybord
+    )
