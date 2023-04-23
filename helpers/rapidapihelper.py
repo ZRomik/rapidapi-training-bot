@@ -166,7 +166,7 @@ class RapidapiHelper:
             )
             return {}
 
-    def get_details(self, id: str) -> 'json':
+    def get_hotel_details(self, id: str) -> 'json':
         """
         Получение дополнительной информации об отеле
         :param id: (str) идентификатор отеля
