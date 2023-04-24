@@ -12,7 +12,8 @@ def build_hotels_list(props_list: list) -> list:
         "id": get_value(i_prop, "id"),
         "name": get_value(i_prop, "name"),
         "score": int(get_value(i_prop, "score")),
-        "amount": round(float(get_value(i_prop, "amount")), 2)
+        "amount": round(float(get_value(i_prop, "amount")), 2),
+        # "address": get_value(i_prop, "addressLine")
     }
     for i_prop in props_list
     ]
@@ -22,7 +23,7 @@ def get_values_for_sort_by_price_and_score(data):
     score = float(get_value(data, "score"))
     return price, score
 
-def sort_hotels_by_price_and_score(hotels_list: list) -> list:
+def sort_hotels_by_score(hotels_list: list) -> list:
     """
     Возвращает отсортированный по оценке клиентов список отелей.
     :param hotels_list: (list) переданный список отелей.
@@ -45,3 +46,16 @@ def filter_hotels_by_price(raw_list: list, min_price: int, max_price: int) -> li
     :return: (list) отфильтрованный список отелей
     """
     return list(filter(lambda price: min_price <= int(get_value(price, "amount")) <= max_price, raw_list))
+
+def slice_list(raw_list: list, count: int) -> list:
+    """
+    Возвращает срез переданного списка
+    :param raw_list: (list) переданный список
+    :param count: (int) длина среза
+    :return: (list) полученный срез
+    """
+    list_len = len(raw_list)
+    if list_len >= count:
+        return raw_list[:count]
+    else:
+        return raw_list[:]

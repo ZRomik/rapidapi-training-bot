@@ -7,8 +7,8 @@ from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher import FSMContext
 import logging
 from helpers import add_user, add_new_search, RapidapiHelper, cancel_search_by_user, update_city_name, update_city_id,\
-    get_value, set_value, build_hotels_list, sort_hotels_by_price_and_score, filter_image_list, cancel_search_by_error,\
-    update_history_data, commands_desc, succes_end_search, filter_hotels_by_price
+    get_value, set_value, build_hotels_list, sort_hotels_by_score, filter_image_list, cancel_search_by_error,\
+    update_history_data, commands_desc, succes_end_search, filter_hotels_by_price, slice_list
 from keyboards import main_menu_keybord, choice_keyboard, cancel_keyboard
 import json
 from aiogram_calendar import SimpleCalendar, simple_cal_callback
@@ -31,6 +31,8 @@ sort_orders = {
     "highprice": "топ самых дорогих отелей в городе",
     "bestdeal": "DISTANCE"
 }
+
+NO_PHOTO_URL = 'https://thumbs.dreamstime.com/b/no-image-available-icon-photo-camera-flat-vector-illustration-132483141.jpg'
 
 
 @dp.message_handler(Text(equals="отмена", ignore_case=True), state="*")
@@ -399,105 +401,126 @@ async def get_result_count(message: Message, state: FSMContext) -> None:
 async def search_offers(message: Message, state: FSMContext) -> None:
     """Поиск предложений и вывод результатов."""
     #region поиск данных
+    data = await state.get_data()
+    command = get_value(data, "cmd name")
+    search_id = get_value(data, "search id")
     await message.answer(
         "Ищу предложения...",
         reply_markup=ReplyKeyboardRemove()
     )
-    data = await state.get_data()
-    command = get_value(data, "cmd name")
     helper = RapidapiHelper.get_helper()
-    order = get_value(commands_desc, get_value(data, "cmd name"))
-    props_list = helper.get_properties_list(
+    prop_data = helper.get_properties_list(
         data=data,
-        sort_order=order
+        sort_order=commands_desc[command]
     )
     #endregion
     #region обработка данных
-    await message.answer(
-        "Обрабатываю данные..."
-    )
     # нет данных
-    if not props_list:
+    if not prop_data:
         await message.answer(
-            "Поисковый сервис не вернул данных.\nИзмените критерии поиска или попробуйте повторить позднее."
+            "Поисковый сервис не вернул данных. Попробуйте изменить критерии поиска или повторить позднее.",
+            reply_markup=main_menu_keybord
         )
-    # ошибка
-    elif "errors" in props_list:
+        await state.finish()
+        cancel_search_by_error(
+            search_id=search_id
+        )
+    # ошибка поиска
+    elif "errors" in prop_data:
         await message.answer(
-            "Поисковый сервис вернул ошибку.\nИзмените критерии поиска или попробуйте повторить позднее."
+            "Поисковый сервис вернул ошибку. Попробуйте изменить критерии поиска или повторить позднее.",
+            reply_markup=main_menu_keybord
         )
-    # все нормально
+        await state.finish()
+    # данные есть, можно работать
     else:
+        # получим "сырой" список отелей
         raw_hotels_list = build_hotels_list(
-            props_list=get_value(props_list, "properties")
-        )
-        # удаление отелей, не подходящих по цене
-        filtered_hotels_list_by_price = filter_hotels_by_price(
-            raw_list=raw_hotels_list,
-            min_price=get_value(data, "min price"),
-            max_price=get_value(data, "max price")
-        )
-        values_count = get_value(data, "value")
-        raw_list_len = len(raw_hotels_list)
-        if raw_list_len > values_count:
-            unsorted_list = filtered_hotels_list_by_price[:values_count]
-        elif raw_list_len <= values_count:
-            unsorted_list = filtered_hotels_list_by_price[:]
-    # сортировка
-    if command == "lowprice":
-        sorted_hotels_list = sort_hotels_by_price_and_score(
-            hotels_list=filtered_hotels_list_by_price
-        )
-    elif command == "highprice":
-        pass
-    else:
-        pass
-    #endregion
-    # region получение фотографий
-    await message.answer(
-        "Загружаю фотографии..."
-    )
-    for i_hotel in sorted_hotels_list:
-        hotel_details = helper.get_hotel_details(
-            id=get_value(i_hotel, "id")
-        )
-        if hotel_details:
-            raw_images_list = get_value(hotel_details, "images")
-            filtered_images_list = filter_image_list(
-                images_list=raw_images_list
+            props_list=get_value(
+                data=prop_data,
+                key="properties"
             )
-            if filtered_images_list:
-                set_value(i_hotel, "image", get_value(filtered_images_list[0], "url"))
-            else:
-                set_value(i_hotel, "image", 'https://thumbs.dreamstime.com/b/'
-                'no-image-available-icon-photo-camera-flat-vector-illustration-132483141.jpg')
-        else:
-            set_value(i_hotel, "image", "")
+        )
+        # выкинем отели, не подходящие по диапазону цен
+        min_price = get_value(data, "min price")
+        max_price = get_value(data, "max price")
+        hotels_list_filtered_by_price = filter_hotels_by_price(
+            raw_list=raw_hotels_list,
+           min_price=min_price,
+            max_price=max_price
+        )
+        # отсортируем список отелей по рейтингу
+        await message.answer(
+            "Сравниваю рейтинги..."
+        )
+        sorted_hotels_list = sort_hotels_by_score(
+            hotels_list=hotels_list_filtered_by_price
+        )
+        # обрежем список до нужного размера
+        count = get_value(data, "value")
+        result_hotels_list = slice_list(
+            raw_list=sorted_hotels_list,
+            count=count
+        )
     #endregion
-    #region вывод данных
+    #region загрузка фотографий
+        await message.answer(
+            "Изучаю фотографии..."
+        )
+        for i_hotel in result_hotels_list:
+            hotel_details = helper.get_hotel_details(
+                id=i_hotel["id"]
+            )
+            if hotel_details:
+                set_value(i_hotel, "address", get_value(hotel_details, "addressLine"))
+                images_list = filter_image_list(
+                    images_list=get_value(hotel_details, "images")
+                )
+                if images_list:
+                    set_value(
+                        i_hotel,
+                        "image",
+                        get_value(images_list[0], "url")
+                    )
+                else:
+                    set_value(
+                        i_hotel,
+                        "image",
+                        NO_PHOTO_URL
+                    )
+            else:
+                set_value(
+                    i_hotel,
+                    "image",
+                    NO_PHOTO_URL
+                )
+    #endregion
+    #region вывод результатата
     await message.answer(
-        "Вывод результата..."
+        "Вывожу результат..."
     )
-    for i_hotel in sorted_hotels_list:
-        hotel_name = get_value(i_hotel, "name")
-        image_url = get_value(i_hotel, "image")
-        score = get_value(i_hotel, "score")
-        price = get_value(i_hotel, "amount")
+    for i_hotel in result_hotels_list:
+        hotel_address = i_hotel["address"]
+        hotel_name = i_hotel["name"]
+        image = i_hotel["image"]
+        score = i_hotel["score"]
+        amount = i_hotel["amount"]
         msg = '\n'.join(
             [
-                f"Отель: {hotel_name}",
-                f"Рейтинг: {score} {score * emoji.emojize(':star:')}",
-                f"Цена: {price}"
+                hotel_name,
+                hotel_address,
+                f"{score} {score * emoji.emojize(':star:')}",
+                str(amount)
+
             ]
         )
-        if image_url:
-            await message.answer_photo(
-                photo=image_url,
-                caption=msg
-            )
-    #endregion
+        await message.answer_photo(
+            photo=image,
+            caption=msg
+        )
     await state.finish()
     await message.answer(
-        "Вывод завершен",
+        "Поиск успешно завершен.",
         reply_markup=main_menu_keybord
     )
+    #endregion
