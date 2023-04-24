@@ -40,7 +40,7 @@ def filter_image_list(images_list: list) -> list:
 def filter_hotels_by_price(raw_list: list, min_price: int, max_price: int) -> list:
     """
     Фильтрует переданный список отелей, удаляя записи, не попадающие в пределы цен
-    :param raw_list: (list) неотфильтрованный списое отелей
+    :param raw_list: (list) нефильтрованный список отелей
     :param min_price: (int) минимальная цена номера.
     :param max_price: (int) максимальная цена номера.
     :return: (list) отфильтрованный список отелей
