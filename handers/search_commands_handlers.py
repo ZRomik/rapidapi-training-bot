@@ -447,7 +447,7 @@ async def search_offers(message: Message, state: FSMContext) -> None:
         max_price = get_value(data, "max price")
         hotels_list_filtered_by_price = filter_hotels_by_price(
             raw_list=raw_hotels_list,
-           min_price=min_price,
+            min_price=min_price,
             max_price=max_price
         )
         # отсортируем список отелей по рейтингу
