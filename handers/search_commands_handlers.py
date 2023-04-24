@@ -496,7 +496,7 @@ async def search_offers(message: Message, state: FSMContext) -> None:
                     NO_PHOTO_URL
                 )
     #endregion
-    #region вывод результатата
+    #region вывод результата
     await message.answer(
         "Вывожу результат..."
     )
