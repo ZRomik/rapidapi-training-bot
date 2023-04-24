@@ -8,7 +8,7 @@ from aiogram.dispatcher import FSMContext
 import logging
 from helpers import add_user, add_new_search, RapidapiHelper, cancel_search_by_user, update_city_name, update_city_id,\
     get_value, set_value, build_hotels_list, sort_hotels_by_price_and_score, filter_image_list, cancel_search_by_error,\
-    update_history_data, commands_desc, succes_end_search
+    update_history_data, commands_desc, succes_end_search, filter_hotels_by_price
 from keyboards import main_menu_keybord, choice_keyboard, cancel_keyboard
 import json
 from aiogram_calendar import SimpleCalendar, simple_cal_callback
@@ -431,16 +431,22 @@ async def search_offers(message: Message, state: FSMContext) -> None:
         raw_hotels_list = build_hotels_list(
             props_list=get_value(props_list, "properties")
         )
+        # удаление отелей, не подходящих по цене
+        filtered_hotels_list_by_price = filter_hotels_by_price(
+            raw_list=raw_hotels_list,
+            min_price=get_value(data, "min price"),
+            max_price=get_value(data, "max price")
+        )
         values_count = get_value(data, "value")
         raw_list_len = len(raw_hotels_list)
         if raw_list_len > values_count:
-            unsorted_list = raw_hotels_list[:values_count]
+            unsorted_list = filtered_hotels_list_by_price[:values_count]
         elif raw_list_len <= values_count:
-            unsorted_list = raw_hotels_list[:]
+            unsorted_list = filtered_hotels_list_by_price[:]
     # сортировка
     if command == "lowprice":
         sorted_hotels_list = sort_hotels_by_price_and_score(
-            hotels_list=unsorted_list
+            hotels_list=filtered_hotels_list_by_price
         )
     elif command == "highprice":
         pass

@@ -35,3 +35,13 @@ def sort_hotels_by_price_and_score(hotels_list: list) -> list:
 def filter_image_list(images_list: list) -> list:
     """Фильтрует переданный список и исключает записи с адресом googleapis"""
     return list(filter(lambda no_google: "googleapis" not in no_google["image"]["url"], images_list))
+
+def filter_hotels_by_price(raw_list: list, min_price: int, max_price: int) -> list:
+    """
+    Фильтрует переданный список отелей, удаляя записи, не попадающие в пределы цен
+    :param raw_list: (list) неотфильтрованный списое отелей
+    :param min_price: (int) минимальная цена номера.
+    :param max_price: (int) максимальная цена номера.
+    :return: (list) отфильтрованный список отелей
+    """
+    return list(filter(lambda price: min_price <= int(get_value(price, "amount")) <= max_price, raw_list))
