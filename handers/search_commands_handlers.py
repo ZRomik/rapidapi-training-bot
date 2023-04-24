@@ -32,7 +32,8 @@ sort_orders = {
     "bestdeal": "DISTANCE"
 }
 
-NO_PHOTO_URL = 'https://thumbs.dreamstime.com/b/no-image-available-icon-photo-camera-flat-vector-illustration-132483141.jpg'
+NO_PHOTO_URL = 'https://thumbs.dreamstime.com/b/'\
+    'no-image-available-icon-photo-camera-flat-vector-illustration-132483141.jpg'
 
 
 @dp.message_handler(Text(equals="отмена", ignore_case=True), state="*")
