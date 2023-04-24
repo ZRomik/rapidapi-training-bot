@@ -7,7 +7,7 @@ from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher import FSMContext
 import logging
 from helpers import add_user, add_new_search, RapidapiHelper, cancel_search_by_user, update_city_name, update_city_id,\
-    get_value, set_value, build_hotels_list, sort_hotels_by_score, filter_image_list, cancel_search_by_error,\
+    get_value, set_value, build_hotels_list, sort_hotels_by_price_and_score, filter_image_list, cancel_search_by_error,\
     update_history_data, commands_desc, succes_end_search, filter_hotels_by_price, slice_list
 from keyboards import main_menu_keybord, choice_keyboard, cancel_keyboard
 import json
@@ -450,13 +450,21 @@ async def search_offers(message: Message, state: FSMContext) -> None:
             min_price=min_price,
             max_price=max_price
         )
-        # отсортируем список отелей по рейтингу
+        # для каждой команды своя сортировка
         await message.answer(
-            "Сравниваю рейтинги..."
+            "Сортирую данные..."
         )
-        sorted_hotels_list = sort_hotels_by_score(
-            hotels_list=hotels_list_filtered_by_price
-        )
+        if command == "lowprice":
+            # сортировка для топа дешевых отелей
+            sorted_hotels_list = sort_hotels_by_price_and_score(
+                hotels_list=hotels_list_filtered_by_price
+            )
+        elif command == "highprice":
+            # сортировка для топа дорогих отелей
+            pass
+        else:
+            # сортировка для топа цена/расстояние от центра
+            pass
         # обрежем список до нужного размера
         count = get_value(data, "value")
         result_hotels_list = slice_list(
@@ -498,7 +506,7 @@ async def search_offers(message: Message, state: FSMContext) -> None:
     #endregion
     #region вывод результата
     await message.answer(
-        "Вывожу результат..."
+        "Вот, что я нашел:"
     )
     for i_hotel in result_hotels_list:
         hotel_address = i_hotel["address"]

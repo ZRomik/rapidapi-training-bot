@@ -23,9 +23,9 @@ def get_values_for_sort_by_price_and_score(data):
     score = float(get_value(data, "score"))
     return price, score
 
-def sort_hotels_by_score(hotels_list: list) -> list:
+def sort_hotels_by_price_and_score(hotels_list: list) -> list:
     """
-    Возвращает отсортированный по оценке клиентов список отелей.
+    Возвращает отсортированный по цене и оценке клиентов список отелей.
     :param hotels_list: (list) переданный список отелей.
     :param min_price: (int) минимальная цена проживания
     :param max_price: (int) максимальная цена проживания
