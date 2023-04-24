@@ -463,7 +463,8 @@ async def search_offers(message: Message, state: FSMContext) -> None:
             if filtered_images_list:
                 set_value(i_hotel, "image", get_value(filtered_images_list[0], "url"))
             else:
-                set_value(i_hotel, "image", "")
+                set_value(i_hotel, "image", 'https://thumbs.dreamstime.com/b/'
+                'no-image-available-icon-photo-camera-flat-vector-illustration-132483141.jpg')
         else:
             set_value(i_hotel, "image", "")
     #endregion
@@ -479,7 +480,7 @@ async def search_offers(message: Message, state: FSMContext) -> None:
         msg = '\n'.join(
             [
                 f"Отель: {hotel_name}",
-                f"Рейтинг: {score} {int(score) * emoji.emojize(':star:')}",
+                f"Рейтинг: {score} {score * emoji.emojize(':star:')}",
                 f"Цена: {price}"
             ]
         )
@@ -487,16 +488,6 @@ async def search_offers(message: Message, state: FSMContext) -> None:
             await message.answer_photo(
                 photo=image_url,
                 caption=msg
-            )
-        else:
-            msg = '\n'.join(
-                [
-                    "Фото отсутствует",
-                    msg
-                ]
-            )
-            await message.answer(
-                msg
             )
     #endregion
     await state.finish()
