@@ -41,16 +41,16 @@ history_db.create_tables([Users, History, CommandsInfo])
 
 commands_desc = [
         {
-            "command": "lowprice",
-            "desc": "топ самых дешёвых отелей в городе"
+            CommandsInfo.command: "lowprice",
+            CommandsInfo.desc: "топ самых дешёвых отелей в городе"
         },
         {
-            "command": "highprice",
-            "desc": "топ самых дорогих отелей в городе"
+            CommandsInfo.command: "highprice",
+            CommandsInfo.desc: "топ самых дорогих отелей в городе"
         },
         {
-            "command": "bestdeal",
-            "desc": "топ отелей, наиболее подходящих по цене и расположению от центра"
+            CommandsInfo.command: "bestdeal",
+            CommandsInfo.desc: "топ отелей, наиболее подходящих по цене и расположению от центра"
         }
     ]
 
