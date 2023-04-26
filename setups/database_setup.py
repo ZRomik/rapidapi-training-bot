@@ -12,14 +12,17 @@ class BaseModel(Model):
     class Meta:
         database = history_db
 
+# модель описывает пользователя.
 class Users(BaseModel):
     tg_id = IntegerField()
 
+# модель описывает команды бота.
 class CommandsInfo(BaseModel):
     command = CharField()
     desc = CharField()
 
 
+# модель описывает историю запросов.
 class History(BaseModel):
     user_id = ForeignKeyField(Users, field="id") # идентификатор пользователя в таблице пользователей
     command_id = ForeignKeyField(CommandsInfo, field="id")
@@ -36,9 +39,10 @@ class History(BaseModel):
 
 
 
-#
+# создание таблиц БД.
 history_db.create_tables([Users, History, CommandsInfo])
 
+# добавление описания команд.
 commands_desc = [
         {
             CommandsInfo.command: "lowprice",
