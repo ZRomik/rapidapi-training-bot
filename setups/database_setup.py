@@ -3,9 +3,10 @@ import datetime
 from peewee import *
 import os
 
-db_name = os.path.abspath("history.db")
+db_name = os.path.abspath("history_data.db")
 history_db = SqliteDatabase(db_name)
 
+# Базовая модель
 class BaseModel(Model):
     id = AutoField()
     class Meta:
@@ -14,8 +15,14 @@ class BaseModel(Model):
 class Users(BaseModel):
     tg_id = IntegerField()
 
+class CommandsInfo(BaseModel):
+    command = CharField()
+    desc = CharField()
+
+
 class History(BaseModel):
     user_id = ForeignKeyField(Users, field="id") # идентификатор пользователя в таблице пользователей
+    command_id = ForeignKeyField(CommandsInfo, field="id")
     search_kind = CharField() # текстовое описание причины поиска
     start_date = DateTimeField(default=datetime.datetime.now()) # дата начала поиска
     city_name = CharField(default="")
@@ -27,4 +34,24 @@ class History(BaseModel):
     error_cancel = BooleanField(default=False) # поиск прекращен из-за ошибки.
     end_date = DateTimeField(null=True)
 
-history_db.create_tables([Users, History])
+
+
+#
+history_db.create_tables([Users, History, CommandsInfo])
+
+commands_desc = [
+        {
+            "command": "lowprice",
+            "desc": "топ самых дешёвых отелей в городе"
+        },
+        {
+            "command": "highprice",
+            "desc": "топ самых дорогих отелей в городе"
+        },
+        {
+            "command": "bestdeal",
+            "desc": "топ отелей, наиболее подходящих по цене и расположению от центра"
+        }
+    ]
+
+CommandsInfo.insert(commands_desc).execute()
