@@ -1,4 +1,3 @@
-import json
 from .commonhelpers import get_value
 
 def filter_search_locations(data) -> list:
