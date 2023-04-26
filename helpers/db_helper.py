@@ -1,6 +1,5 @@
 import datetime
-
-from setups import Users, History
+from setups import Users, History, CommandsInfo
 
 
 def get_user_id(id: int) -> int:
@@ -28,7 +27,8 @@ def add_new_search(user_id: int, kind: str) -> int:
     return (
         History.insert(
             user_id=user_id,
-            search_kind=kind
+            command_id=CommandsInfo.select().where(CommandsInfo.command == kind)
+            # search_kind=kind
         )
         .execute()
     )
@@ -49,7 +49,14 @@ def cancel_search_by_error(search_id: int) -> None:
     Обновляет таблицу истории. Выставляет флаг отмены поиска из-за ошибки.
     :param search_id: (int) идентификатор записи в таблице истории
     """
-    History.update({"cancelled": True, "error_cancel": True}).where(id == search_id).execute()
+    History.update(
+        {
+            "cancelled": True,
+            "error_cancel": True
+        }
+    ).where(
+        id == search_id
+    ).execute()
 
 def update_city_name(search_id: int, city_name: str) -> None:
     """
