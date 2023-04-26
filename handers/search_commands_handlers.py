@@ -464,6 +464,7 @@ async def search_offers(message: Message, state: FSMContext) -> None:
             pass
         else:
             # сортировка для топа цена/расстояние от центра
+            #TODO: Реализовать сортировку списка по цене и удаленности от центра.
             pass
         # обрежем список до нужного размера
         count = get_value(data, "value")
