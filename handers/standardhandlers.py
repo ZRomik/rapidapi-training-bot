@@ -101,48 +101,55 @@ async def get_records_count(message: Message, state: FSMContext) -> None:
         )
         if history_list:
             for i_num, i_info in enumerate(history_list):
-                text_list = []
-                start_at = get_value(i_info, "start date")
-                end_at = get_value(i_info, "end date")
+                search_id = i_num + 1
+                start_at = i_info["start date"]
+                end_at = i_info["end date"]
+                search_kind = i_info["command_desc"]
+                city_name = i_info["city name"]
+                cancelled = i_info["cancelled"]
+                user_cancel = i_info["user cancel"]
+                error_cancel = i_info["error cancel"]
+                adults_count = i_info["adults"]
+                children_count = i_info["children"]
                 if start_at:
-                    start_date, start_time = format_date_time(start_at)
+                    start_date, start_time = start_at.strftime(
+                        "%d.%m%Y %H:%M:%S"
+                    ).split()
                 if end_at:
-                    end_date, end_time = format_date_time(end_at)
-                city_name = get_value(i_info, "city name")
-                cancelled = get_value(i_info, "cancelled")
-                user_cancel = get_value(i_info, "user cancel")
-                adults = get_value(i_info, "adults")
-                children = get_value(i_info, "children")
-                kind = get_value(i_info, "kind")
-                text_list.append(f"Поиск #{i_num + 1}")
-                text_list.append(f"Поиск начат {start_date} в {start_time}")
-                if city_name:
-                    text_list.append(f"Вы искали отели в городе {city_name}")
-                text_list.append(f"Вы искали: {get_value(commands_desc, kind)}")
-                if end_at:
-                    text_list.append(f"Поиск закончен {end_date} в {end_time}")
-                text = "Результат: "
+                    end_date, end_time = end_at.strftime(
+                        "%d.%m%Y %H:%M:%S"
+                    ).split()
+                text_list = [
+                    f"Поиск #{search_id}",
+                    f"Поиск начат {start_date} в {start_time}",
+                    f"Вы хотели найти {search_kind}"
+                ]
                 if cancelled:
+                    text_list.append(
+                        f"Поиск отменен {end_date} в {end_time}"
+                    )
+                    # если поиск отменен
                     if user_cancel:
-                        text += "поиск отменен пользователем."
-                    else:
-                        text += "поиск завершился ошибкой."
+                        text_list.append(
+                            "Поиск отменен пользователем."
+                        )
+                    # нет смысла продолжать
+                    elif error_cancel:
+                        text_list.append(
+                            "Поиск отменен из-за ошибки."
+                        )
+                    msg = '\n'.join(
+                        text_list
+                    )
+                    await message.answer(
+                        msg,
+                        reply_markup=ReplyKeyboardRemove()
+                    )
+                    # иначе покажем информацию.
                 else:
-                    text += "поиск завершен без ошибок."
-                text_list.append(text)
-                msg = '\n'.join(text_list)
-                await message.answer(
-                    msg,
-                    reply_markup=ReplyKeyboardRemove()
-                )
+                    pass
+            await state.finish()
             await message.answer(
                 "Вывод завершен.",
                 reply_markup=main_menu_keybord
             )
-            await state.finish()
-        else:
-            await message.answer(
-                "Ваша история поиска пуста.",
-                reply_markup=main_menu_keybord
-            )
-            await state.finish()
