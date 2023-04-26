@@ -121,19 +121,18 @@ async def get_records_count(message: Message, state: FSMContext) -> None:
                     ).split()
                 text_list = [
                     f"Поиск #{search_id}",
-                    f"Поиск начат {start_date} в {start_time}",
-                    f"Вы хотели найти {search_kind}"
+                    f"Поиск начат {start_date} в {start_time}"
                 ]
+                # если поиск отменен
                 if cancelled:
                     text_list.append(
                         f"Поиск отменен {end_date} в {end_time}"
                     )
-                    # если поиск отменен
+                    # нет смысла продолжать
                     if user_cancel:
                         text_list.append(
                             "Поиск отменен пользователем."
                         )
-                    # нет смысла продолжать
                     elif error_cancel:
                         text_list.append(
                             "Поиск отменен из-за ошибки."
@@ -147,7 +146,29 @@ async def get_records_count(message: Message, state: FSMContext) -> None:
                     )
                     # иначе покажем информацию.
                 else:
-                    pass
+                    if city_name:
+                        text_list.append(
+                            f"В городе '{city_name}' вы хотели найти {search_kind}."
+                        )
+                        text_list.append(
+                            f"Постояльцы:"
+                        )
+                        text_list.append(
+                            f"Взрослые: {adults_count}"
+                        )
+                        text_list.append(
+                            f"Дети: {children_count}"
+                        )
+                        text_list.append(
+                            f"Поиск завершен {end_date} в {end_time}"
+                        )
+                        text_list.append(
+                            "Поиск завершен без ошибок."
+                        )
+                        msg = '\n'.join(text_list)
+                        await message.answer(
+                            msg
+                        )
             await state.finish()
             await message.answer(
                 "Вывод завершен.",

@@ -527,6 +527,7 @@ async def search_offers(message: Message, state: FSMContext) -> None:
             photo=image,
             caption=msg
         )
+    succes_end_search(search_id=search_id)
     await state.finish()
     await message.answer(
         "Поиск успешно завершен.",

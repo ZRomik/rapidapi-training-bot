@@ -45,7 +45,7 @@ def filter_hotels_by_price(raw_list: list, min_price: int, max_price: int) -> li
     :param max_price: (int) максимальная цена номера.
     :return: (list) отфильтрованный список отелей
     """
-    return list(filter(lambda price: min_price <= int(get_value(price, "amount")) <= max_price, raw_list))
+    return list(filter(lambda price: min_price <= int(price["amount"]) <= max_price, raw_list))
 
 def slice_list(raw_list: list, count: int) -> list:
     """
