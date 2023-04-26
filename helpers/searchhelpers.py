@@ -25,8 +25,6 @@ def sort_hotels_by_price_and_score(hotels_list: list) -> list:
     """
     Возвращает отсортированный по цене и оценке клиентов список отелей.
     :param hotels_list: (list) переданный список отелей.
-    :param min_price: (int) минимальная цена проживания
-    :param max_price: (int) максимальная цена проживания
     :return: (list) отсортированный список отелей.
     """
     return sorted(hotels_list, key=get_values_for_sort_by_price_and_score)
