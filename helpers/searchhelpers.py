@@ -13,7 +13,6 @@ def build_hotels_list(props_list: list) -> list:
         "name": get_value(i_prop, "name"),
         "score": int(get_value(i_prop, "score")),
         "amount": round(float(get_value(i_prop, "amount")), 2),
-        # "address": get_value(i_prop, "addressLine")
     }
     for i_prop in props_list
     ]
