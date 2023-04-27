@@ -7,8 +7,8 @@ from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher import FSMContext
 import logging
 from helpers import add_user, add_new_search, RapidapiHelper, cancel_search_by_user, update_city_name, update_city_id,\
-    get_value, set_value, build_hotels_list, sort_hotels_by_price_and_score, filter_image_list, cancel_search_by_error,\
-    update_history_data, commands_desc, succes_end_search, filter_hotels_by_price, slice_list
+    get_value, set_value, build_hotels_list, sort_hotels_by_score, filter_image_list, cancel_search_by_error,\
+    update_history_data, commands_desc, succes_end_search, filter_hotels_by_price, slice_list, sort_hotels_by_dsp
 from keyboards import main_menu_keybord, choice_keyboard, cancel_keyboard
 import json
 from aiogram_calendar import SimpleCalendar, simple_cal_callback
@@ -34,6 +34,11 @@ sort_orders = {
 
 NO_PHOTO_URL = 'https://thumbs.dreamstime.com/b/'\
     'no-image-available-icon-photo-camera-flat-vector-illustration-132483141.jpg'
+
+distance_dict = {
+    "kilometer": "км.",
+    "mile": "мл."
+}
 
 
 @dp.message_handler(Text(equals="отмена", ignore_case=True), state="*")
@@ -456,7 +461,7 @@ async def search_offers(message: Message, state: FSMContext) -> None:
         )
         if command == "lowprice":
             # сортировка для топа дешевых отелей
-            sorted_hotels_list = sort_hotels_by_price_and_score(
+            sorted_hotels_list = sort_hotels_by_score(
                 hotels_list=hotels_list_filtered_by_price
             )
         elif command == "highprice":
@@ -466,7 +471,9 @@ async def search_offers(message: Message, state: FSMContext) -> None:
             # сортировка для топа цена/расстояние от центра
             # TODO: Реализовать сортировку списка по цене и удаленности от центра.
             # имя ключа - distanceFromMessaging
-            pass
+            sorted_hotels_list = sort_hotels_by_dsp(
+                hotels_list=hotels_list_filtered_by_price
+            )
         # обрежем список до нужного размера
         count = get_value(data, "value")
         result_hotels_list = slice_list(
@@ -516,14 +523,18 @@ async def search_offers(message: Message, state: FSMContext) -> None:
         image = i_hotel["image"]
         score = i_hotel["score"]
         amount = i_hotel["amount"]
+        distance = i_hotel["distance"]
+        units = i_hotel["units"]
+        text_list = [
+            hotel_name,
+            hotel_address,
+            f"{score} {score * emoji.emojize(':star:')}",
+            str(amount)
+        ]
+        if distance:
+            text_list.append(f"{distance} {distance_dict[units.lower()]} от центра")
         msg = '\n'.join(
-            [
-                hotel_name,
-                hotel_address,
-                f"{score} {score * emoji.emojize(':star:')}",
-                str(amount)
-
-            ]
+            text_list
         )
         await message.answer_photo(
             photo=image,
