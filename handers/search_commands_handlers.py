@@ -177,18 +177,29 @@ async def get_check_in_date(callback_query: CallbackQuery, callback_data: dict) 
     if selected:
         state = dp.current_state()
         data = await state.get_data()
-        check_in = date.strftime("%d.%m.%Y")
-        set_value(data, "check in", check_in)
-        await state.set_data(data)
-        await callback_query.message.answer(
-            check_in,
-            reply_markup=ReplyKeyboardRemove()
-        )
-        await SearchStates.next()
-        await callback_query.message.answer(
-            "Выберите дату выезда:",
-            reply_markup= await SimpleCalendar().start_calendar()
-        )
+        current_date = datetime.datetime.now()
+        if date < current_date:
+            await callback_query.message.answer(
+                "Ошибка! Дата въезда не может быть меньше текущей даты!",
+                reply_markup=ReplyKeyboardRemove()
+            )
+            await callback_query.message.answer(
+                "Выберите дату въезда:",
+                reply_markup= await SimpleCalendar().start_calendar()
+            )
+        else:
+            check_in = date.strftime("%d.%m.%Y")
+            set_value(data, "check in", check_in)
+            await state.set_data(data)
+            await callback_query.message.answer(
+                check_in,
+                reply_markup=ReplyKeyboardRemove()
+            )
+            await SearchStates.next()
+            await callback_query.message.answer(
+                "Выберите дату выезда:",
+                reply_markup= await SimpleCalendar().start_calendar()
+            )
 
 
 @dp.callback_query_handler(simple_cal_callback.filter(), state=SearchStates.get_check_out_date)
@@ -196,22 +207,43 @@ async def get_check_out_date(callback_query: CallbackQuery, callback_data: dict)
     """
     Получение даты выезда.
     """
+    state = dp.current_state()
+    data = await state.get_data()
     selected, date = await SimpleCalendar().process_selection(callback_query, callback_data)
     if selected:
-        state = dp.current_state()
-        data = await state.get_data()
-        check_out = date.strftime("%d.%m.%Y")
-        set_value(data, "check out", check_out)
-        await state.set_data(data)
-        await callback_query.message.answer(
-            check_out,
-            reply_markup=ReplyKeyboardRemove()
-        )
-        await SearchStates.next()
-        await callback_query.message.answer(
-            "Введите количество взрослых постояльцев:",
-            reply_markup=cancel_keyboard
-        )
+        check_in = datetime.datetime.strptime(get_value(data, "check in"), "%d.%m.%Y")
+        current_date = datetime.datetime.now()
+        if date < current_date:
+            await callback_query.message.answer(
+                "Ошибка! Дата выезда не может быть меньше текущей даты!",
+                reply_markup=ReplyKeyboardRemove()
+            )
+            await callback_query.message.answer(
+                "Выберите дату выезда: ",
+                reply_markup= await SimpleCalendar().start_calendar()
+            )
+        elif check_in < date:
+            await callback_query.message.answer(
+                "Ошибка! Дата выезда не может быть меньше даты въезда!",
+                reply_markup=ReplyKeyboardRemove()
+            )
+            await callback_query.message.answer(
+                "Выберите дату выезда: ",
+                reply_markup= await SimpleCalendar().start_calendar()
+            )
+        else:
+            check_out = date.strftime("%d.%m.%Y")
+            set_value(data, "check out", check_out)
+            await state.set_data(data)
+            await callback_query.message.answer(
+                check_out,
+                reply_markup=ReplyKeyboardRemove()
+            )
+            await SearchStates.next()
+            await callback_query.message.answer(
+                "Введите количество взрослых постояльцев:",
+                reply_markup=cancel_keyboard
+            )
 
 
 @dp.message_handler(state=SearchStates.get_adults_count)
