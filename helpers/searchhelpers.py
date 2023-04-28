@@ -49,7 +49,7 @@ def sort_hotels_by_score(hotels_list: list) -> list:
         key=lambda score: score["score"]
     )
 
-def sort_hotels_by_dsp(hotels_list: list) -> list:
+def sort_hotels_by_ds(hotels_list: list) -> list:
     """
     dsp - distance&score&price
     Сортирует переданный список отелей по расстоянию от центра, оценке постояльцев и цене
