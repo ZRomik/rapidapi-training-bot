@@ -468,9 +468,6 @@ async def search_offers(message: Message, state: FSMContext) -> None:
             # сортировка для топа дорогих отелей
             pass
         else:
-            # сортировка для топа цена/расстояние от центра
-            # TODO: Реализовать сортировку списка по цене и удаленности от центра.
-            # имя ключа - distanceFromMessaging
             sorted_hotels_list = sort_hotels_by_dsp(
                 hotels_list=hotels_list_filtered_by_price
             )
