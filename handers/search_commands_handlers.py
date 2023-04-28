@@ -222,7 +222,7 @@ async def get_check_out_date(callback_query: CallbackQuery, callback_data: dict)
                 "Выберите дату выезда: ",
                 reply_markup= await SimpleCalendar().start_calendar()
             )
-        elif check_in < date:
+        elif date < check_in:
             await callback_query.message.answer(
                 "Ошибка! Дата выезда не может быть меньше даты въезда!",
                 reply_markup=ReplyKeyboardRemove()
