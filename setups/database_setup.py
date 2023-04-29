@@ -40,7 +40,9 @@ class History(BaseModel):
 
 
 # создание таблиц БД.
-history_db.create_tables([Users, History, CommandsInfo])
+tables = [Users, History, CommandsInfo]
+if not all(i.table_exists() for i in tables):
+    history_db.create_tables([Users, History, CommandsInfo])
 
 # добавление описания команд.
 commands_desc = [
