@@ -360,7 +360,14 @@ async def get_max_price(message: Message, state: FSMContext) -> None:
         )
     else:
         data = await state.get_data()
-        set_value(data, "max price", int(text))
+        min_price = get_value(data, "min price")
+        max_price = int(text)
+        if max_price < min_price:
+            await message.answer(
+                "Ошибка! Максимальная цена не может быть меньше минимальной. Повторите ввод"
+            )
+            return
+        set_value(data, "max price", max_price)
         await state.set_data(data)
         await SearchStates.next()
         await message.answer(
