@@ -180,7 +180,7 @@ async def get_check_in_date(callback_query: CallbackQuery, callback_data: dict) 
         current_date = datetime.datetime.now()
         if date < current_date:
             await callback_query.message.answer(
-                "Ошибка! Дата въезда не может быть меньше текущей даты!",
+                "Ошибка! Дата въезда не может быть раньше текущей даты!",
                 reply_markup=ReplyKeyboardRemove()
             )
             await callback_query.message.answer(
@@ -224,7 +224,7 @@ async def get_check_out_date(callback_query: CallbackQuery, callback_data: dict)
             )
         elif date < check_in:
             await callback_query.message.answer(
-                "Ошибка! Дата выезда не может быть меньше даты въезда!",
+                "Ошибка! Дата выезда не может быть раньше даты въезда!",
                 reply_markup=ReplyKeyboardRemove()
             )
             await callback_query.message.answer(
