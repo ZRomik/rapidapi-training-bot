@@ -215,7 +215,7 @@ async def get_check_out_date(callback_query: CallbackQuery, callback_data: dict)
         current_date = datetime.datetime.now()
         if date < current_date:
             await callback_query.message.answer(
-                "Ошибка! Дата выезда не может быть меньше текущей даты!",
+                "Ошибка! Дата выезда не может быть раньше текущей даты!",
                 reply_markup=ReplyKeyboardRemove()
             )
             await callback_query.message.answer(
