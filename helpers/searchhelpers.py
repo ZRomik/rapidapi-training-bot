@@ -22,7 +22,16 @@ def build_hotels_list(props_list: list) -> list:
         for i_prop in props_list
     ]
 
-
+def get_values_for_sort_by_price_and_score(data: Any) -> tuple:
+    amount = get_value(
+        data,
+        "amount"
+    )
+    score = get_value(
+        data,
+        "score"
+    )
+    return amount, score
 
 def get_values_for_sort_by_ds(data: Any) -> tuple:
     score = float(
@@ -89,3 +98,16 @@ def slice_list(raw_list: list, count: int) -> list:
         return raw_list[:count]
     else:
         return raw_list[:]
+
+def sort_hotels_by_price_and_score(hotels_list: list, is_reverse: bool = False) -> list:
+    """
+    Сортирует переданный список отелей по цене и оценке посетителей
+    :param hotels_list: (list) "сырой" список отелей
+    :param is_reverse: (bool) флаг реверсной сортировки.
+    :returns (list) результат сортировки
+    """
+    return sorted(
+        hotels_list,
+        key=get_values_for_sort_by_price_and_score,
+        reverse=is_reverse
+    )

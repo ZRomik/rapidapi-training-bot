@@ -8,7 +8,8 @@ from aiogram.dispatcher import FSMContext
 import logging
 from helpers import add_user, add_new_search, RapidapiHelper, cancel_search_by_user, update_city_name, update_city_id,\
     get_value, set_value, build_hotels_list, sort_hotels_by_score, filter_image_list, cancel_search_by_error,\
-    update_history_data, commands_desc, succes_end_search, filter_hotels_by_price, slice_list, sort_hotels_by_ds
+    update_history_data, commands_desc, succes_end_search, filter_hotels_by_price, slice_list, sort_hotels_by_ds,\
+    sort_hotels_by_price_and_score
 from keyboards import main_menu_keybord, choice_keyboard, cancel_keyboard
 import json
 from aiogram_calendar import SimpleCalendar, simple_cal_callback
@@ -505,7 +506,10 @@ async def search_offers(message: Message, state: FSMContext) -> None:
             )
         elif command == "highprice":
             # сортировка для топа дорогих отелей
-            pass
+            sorted_hotels_list = sort_hotels_by_price_and_score(
+                hotels_list=hotels_list_filtered_by_price,
+                is_reverse=True
+            )
         else:
             sorted_hotels_list = sort_hotels_by_ds(
                 hotels_list=hotels_list_filtered_by_price
