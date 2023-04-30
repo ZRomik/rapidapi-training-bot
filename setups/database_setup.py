@@ -60,4 +60,6 @@ commands_desc = [
         }
     ]
 
-CommandsInfo.insert(commands_desc).execute()
+id = CommandsInfo.get_or_none()
+if id is None:
+    CommandsInfo.insert(commands_desc).execute()
