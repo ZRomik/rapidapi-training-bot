@@ -169,8 +169,14 @@ async def get_records_count(message: Message, state: FSMContext) -> None:
                         await message.answer(
                             msg
                         )
+                        await state.finish()
+                        await message.answer(
+                            "Вывод завершен.",
+                            reply_markup=main_menu_keybord
+                        )
+        else:
             await state.finish()
             await message.answer(
-                "Вывод завершен.",
+                "Вы еще ничего не искали.",
                 reply_markup=main_menu_keybord
             )
