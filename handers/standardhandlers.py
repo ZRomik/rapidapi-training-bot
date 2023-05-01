@@ -115,14 +115,26 @@ async def get_records_count(message: Message, state: FSMContext) -> None:
                     start_date, start_time = start_at.strftime(
                         "%d.%m%Y %H:%M:%S"
                     ).split()
-                if end_at:
-                    end_date, end_time = end_at.strftime(
-                        "%d.%m%Y %H:%M:%S"
-                    ).split()
                 text_list = [
                     f"Поиск #{search_id}",
                     f"Поиск начат {start_date} в {start_time}"
                 ]
+                if end_at:
+                    end_date, end_time = end_at.strftime(
+                        "%d.%m%Y %H:%M:%S"
+                    ).split()
+                    text_list.append(
+                        f"Поиск закончен: {end_date} в {end_time}"
+                    )
+                else:
+                    text_list.append(
+                        "Поиск не закончен"
+                    )
+                    msg = '\n'.join(text_list)
+                    await message.answer(
+                        msg
+                    )
+                    continue
                 # если поиск отменен
                 if cancelled:
                     text_list.append(
@@ -158,9 +170,6 @@ async def get_records_count(message: Message, state: FSMContext) -> None:
                         )
                         text_list.append(
                             f"Дети: {children_count}"
-                        )
-                        text_list.append(
-                            f"Поиск завершен {end_date} в {end_time}"
                         )
                         text_list.append(
                             "Поиск завершен без ошибок."
