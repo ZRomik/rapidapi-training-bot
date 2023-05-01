@@ -2,6 +2,5 @@ aiogram==2.25.1
 aiogram-calendar==0.1.1
 emoji==2.2.0
 peewee==3.16.2
-pycparser==2.21
 python-dotenv==1.0.0
 requests==2.29.0
