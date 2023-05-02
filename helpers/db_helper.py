@@ -56,7 +56,7 @@ def cancel_search_by_error(search_id: int) -> None:
         id == search_id
     ).execute()
 
-def update_city_name(search_id: int, city_name: str) -> None:
+def update_city_name(search_id: int, city_name: str, user_tg_id: int) -> None:
     """
     Обновляет таблицу истории. Устанавливает название города.
     :param search_id: (int) идентификатор записи в таблице истории
@@ -66,7 +66,8 @@ def update_city_name(search_id: int, city_name: str) -> None:
             "city_name": city_name
         }
     ).where(
-        id == search_id
+        History.id == search_id
+        and History.user_id == Users.select(["id"]).where(Users.tg_id == user_tg_id)
     ).execute()
 
 def update_city_id(search_id: int, city_id: str) -> None:

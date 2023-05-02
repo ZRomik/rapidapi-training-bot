@@ -116,7 +116,11 @@ async def get_city_name(message: Message, state: FSMContext) -> None:
     data = await state.get_data()
     set_value(data, "city name", city_name)
     await state.set_data(data)
-    update_city_name(search_id=get_value(data, "search id"), city_name=city_name)
+    update_city_name(
+        search_id=get_value(data, "search id"),
+        city_name=city_name,
+        user_tg_id=message.from_user.id
+    )
     await message.answer(
         f"Поиск данных о городе '{city_name}'"
     )
@@ -137,6 +141,13 @@ async def get_city_name(message: Message, state: FSMContext) -> None:
             await state.set_data(data)
             await message.answer(
                 "Запомнил."
+            )
+            # обновим название города в таблице
+            search_id = get_value(data, "search id")
+            update_city_name(
+                search_id=search_id,
+                city_name=city_name,
+                user_tg_id=message.from_user.id
             )
             await SearchStates.next()
             await message.answer(
